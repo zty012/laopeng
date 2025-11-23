@@ -4,13 +4,16 @@ import {
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useConversations } from "@/lib/conversationContext";
 import { Link } from "@/router";
-import { Home } from "lucide-react";
+import { Home, Plus, Trash2 } from "lucide-react";
 import { ModeToggle } from "./mode-toggle";
 
 const items = [
@@ -22,6 +25,14 @@ const items = [
 ] as const;
 
 export default function AppSidebar() {
+  const {
+    conversations,
+    currentConversationId,
+    createNewConversation,
+    selectConversation,
+    deleteConversation,
+  } = useConversations();
+
   return (
     <Sidebar>
       <SidebarHeader>
@@ -39,6 +50,37 @@ export default function AppSidebar() {
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>对话</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton onClick={createNewConversation}>
+                  <Plus />
+                  <span>新建对话</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {conversations.map((conv) => (
+                <SidebarMenuItem key={conv.id}>
+                  <SidebarMenuButton
+                    isActive={conv.id === currentConversationId}
+                    onClick={() => selectConversation(conv.id)}
+                  >
+                    <span className="truncate">{conv.title}</span>
+                  </SidebarMenuButton>
+                  <SidebarMenuAction
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteConversation(conv.id);
+                    }}
+                  >
+                    <Trash2 />
+                  </SidebarMenuAction>
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>
