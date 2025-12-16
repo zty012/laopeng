@@ -11,6 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { AGENTS } from "@/lib/agents";
 import { useConversations } from "@/lib/conversationContext";
 import { Link } from "@/router";
 import { Home, Plus, Trash2 } from "lucide-react";
@@ -56,11 +57,35 @@ export default function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
         <SidebarGroup>
+          <SidebarGroupLabel>智能体</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {AGENTS.map((agent) => (
+                <SidebarMenuItem key={agent.id}>
+                  <SidebarMenuButton
+                    onClick={() =>
+                      createNewConversation(
+                        agent.systemPrompt,
+                        agent.title,
+                        agent.id,
+                      )
+                    }
+                    title={agent.description}
+                  >
+                    <agent.icon />
+                    <span>{agent.title}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
           <SidebarGroupLabel>对话</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton onClick={createNewConversation}>
+                <SidebarMenuButton onClick={() => createNewConversation()}>
                   <Plus />
                   <span>新建对话</span>
                 </SidebarMenuButton>

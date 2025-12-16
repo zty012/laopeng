@@ -2,12 +2,20 @@ import { OpenAI } from "openai";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+export interface Attachment {
+  name: string;
+  contentType: string;
+  content: string;
+}
+
 export interface Conversation {
   id: string;
   title: string;
+  agentId?: string;
   messages: (OpenAI.ChatCompletionMessageParam & {
     tokens?: number;
     reasoning_content?: string;
+    attachments?: Attachment[];
   })[];
   createdAt: Date;
 }
@@ -18,8 +26,13 @@ interface ConversationContextType {
   currentMessages: (OpenAI.ChatCompletionMessageParam & {
     tokens?: number;
     reasoning_content?: string;
+    attachments?: Attachment[];
   })[];
-  createNewConversation: () => void;
+  createNewConversation: (
+    systemPrompt?: string,
+    title?: string,
+    agentId?: string,
+  ) => void;
   selectConversation: (id: string) => void;
   updateCurrentConversation: (
     updater: (prev: Conversation["messages"]) => Conversation["messages"],
@@ -64,15 +77,13 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
   }, [conversations]);
 
-  const createNewConversation = () => {
+  const createNewConversation = (
+    systemPrompt?: string,
+    title?: string,
+    agentId?: string,
+  ) => {
     const id = crypto.randomUUID();
-    const newConv: Conversation = {
-      id,
-      title: "新对话",
-      messages: [
-        {
-          role: "system",
-          content: `
+    const defaultSystemPrompt = `
 你是「LaoPeng-01」模型，一个由上海市进才中学北校初二「罐装知识小组」自主研发的大语言模型，目标用户是初中阶段的学生和教师。
 研发过程没有请教老师。
 
@@ -236,7 +247,16 @@ export function ConversationProvider({ children }: { children: ReactNode }) {
 ### 9. 开头与结尾
 * 结尾是否对全文进行了有效的收束，并在意义、情感或启示上进行了自然的升华？
 * 开头与结尾是否在内容或情感上形成了巧妙的呼应？
-`,
+`;
+
+    const newConv: Conversation = {
+      id,
+      title: title || "新对话",
+      agentId,
+      messages: [
+        {
+          role: "system",
+          content: systemPrompt || defaultSystemPrompt,
         },
       ],
       createdAt: new Date(),

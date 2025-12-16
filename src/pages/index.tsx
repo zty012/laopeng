@@ -6,13 +6,16 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Textarea } from "@/components/ui/textarea";
+import { AGENTS } from "@/lib/agents";
 import { AITools } from "@/lib/aiTools";
+import type { Attachment } from "@/lib/conversationContext";
 import { useConversations } from "@/lib/conversationContext";
 import { openai } from "@/lib/openai";
 import {
   BrainCircuit,
   ChevronRight,
   Loader2,
+  Paperclip,
   Send,
   Wrench,
 } from "lucide-react";
@@ -24,10 +27,26 @@ export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [requesting, setRequesting] = useState(false);
   const messagesElRef = useRef<HTMLDivElement>(null);
-  const { currentMessages, updateCurrentConversation } = useConversations();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const {
+    currentMessages,
+    updateCurrentConversation,
+    conversations,
+    currentConversationId,
+  } = useConversations();
+
+  const currentConversation = conversations.find(
+    (c) => c.id === currentConversationId,
+  );
+  const currentAgent = currentConversation?.agentId
+    ? AGENTS.find((g) => g.id === currentConversation.agentId)
+    : null;
 
   function addMessage(
-    message: OpenAI.ChatCompletionMessageParam & { tokens?: number },
+    message: OpenAI.ChatCompletionMessageParam & {
+      tokens?: number;
+      attachments?: Attachment[];
+    },
   ) {
     updateCurrentConversation((prev) => [...prev, message]);
   }
@@ -47,18 +66,57 @@ export default function Home() {
     }
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      const attachment: Attachment = {
+        name: file.name,
+        contentType: file.type,
+        content: content,
+      };
+      const newMessage: OpenAI.ChatCompletionMessageParam & {
+        attachments: Attachment[];
+      } = {
+        role: "user",
+        content: "",
+        attachments: [attachment],
+      };
+      addMessage(newMessage);
+      run([...currentMessages, newMessage]);
+    };
+    reader.readAsText(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   async function run(
-    msgs: OpenAI.ChatCompletionMessageParam[] = [
-      ...currentMessages,
-      { role: "user", content: inputValue },
-    ],
+    msgs: (OpenAI.ChatCompletionMessageParam & {
+      attachments?: Attachment[];
+    })[] = [...currentMessages, { role: "user", content: inputValue }],
   ) {
     scrollToBottom();
     setRequesting(true);
     try {
+      const processedMsgs = msgs.map((msg) => {
+        const newMsg = { ...msg };
+        if (newMsg.attachments && newMsg.attachments.length > 0) {
+          const attachmentContent = newMsg.attachments
+            .map((a) => `\n\n[File: ${a.name}]\n${a.content}`)
+            .join("\n");
+          newMsg.content = (newMsg.content as string) + attachmentContent;
+        }
+        const { attachments: _attachments, ...rest } = newMsg as any;
+        return rest as OpenAI.ChatCompletionMessageParam;
+      });
+
       const stream = await openai.chat.completions.create({
         model: "doubao-seed-1.6-thinking",
-        messages: msgs,
+        messages: processedMsgs,
         stream: true,
         tools: AITools.tools,
         tool_choice: "auto",
@@ -172,12 +230,39 @@ export default function Home() {
         className="flex flex-1 flex-col gap-2 overflow-y-auto"
         ref={messagesElRef}
       >
+        {currentMessages.filter((m) => m.role !== "system").length === 0 && (
+          <div className="text-muted-foreground flex h-full flex-col items-center justify-center">
+            {currentAgent ? (
+              <>
+                <currentAgent.icon className="mb-4 h-12 w-12" />
+                <h2 className="text-lg font-semibold">{currentAgent.title}</h2>
+                <p className="text-sm">{currentAgent.description}</p>
+              </>
+            ) : (
+              <>
+                <h2 className="text-lg font-semibold">真·老彭</h2>
+                <p className="text-sm">有什么可以帮你的吗？</p>
+              </>
+            )}
+          </div>
+        )}
         {currentMessages.map((msg, i) =>
           msg.role === "user" ? (
-            <div key={i} className="flex justify-end">
-              <div className="bg-accent text-accent-foreground max-w-11/12 rounded-2xl rounded-br-none px-3 py-2">
-                {msg.content as string}
-              </div>
+            <div key={i} className="flex flex-col items-end gap-1">
+              {msg.attachments?.map((attachment, index) => (
+                <div
+                  key={index}
+                  className="bg-accent text-accent-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+                >
+                  <Paperclip className="h-4 w-4" />
+                  <span>{attachment.name}</span>
+                </div>
+              ))}
+              {msg.content && (
+                <div className="bg-accent text-accent-foreground max-w-11/12 rounded-2xl rounded-br-none px-3 py-2">
+                  {msg.content as string}
+                </div>
+              )}
             </div>
           ) : msg.role === "assistant" ? (
             <div key={i} className="flex flex-col gap-2">
@@ -249,6 +334,16 @@ export default function Home() {
           }}
         />
         <div className="flex gap-2 p-2">
+          <input
+            type="file"
+            className="hidden"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+          />
+          <Paperclip
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          />
           <div className="flex-1"></div>
           {requesting ? (
             <Loader2 className="animate-spin" />
