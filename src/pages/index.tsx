@@ -19,6 +19,7 @@ import {
   Send,
   Wrench,
 } from "lucide-react";
+import * as mammoth from "mammoth";
 import { OpenAI } from "openai";
 import { useRef, useState } from "react";
 import { Fragment } from "react/jsx-runtime";
@@ -66,13 +67,31 @@ export default function Home() {
     }
   }
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const content = e.target?.result as string;
+    console.log("File uploaded:", file.name, file.type);
+    try {
+      let content = "";
+      const isDocx =
+        file.name.toLowerCase().endsWith(".docx") ||
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+      if (isDocx) {
+        console.log("Detected docx, parsing...");
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await mammoth.extractRawText({ arrayBuffer });
+        content = result.value;
+        console.log("Parsed content length:", content.length);
+      } else if (file.name.toLowerCase().endsWith(".doc")) {
+        throw new Error("不支持 .doc 格式，请转换为 .docx 后上传");
+      } else {
+        console.log("Reading as text...");
+        content = await file.text();
+      }
+
       const attachment: Attachment = {
         name: file.name,
         contentType: file.type,
@@ -87,10 +106,16 @@ export default function Home() {
       };
       addMessage(newMessage);
       run([...currentMessages, newMessage]);
-    };
-    reader.readAsText(file);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    } catch (e) {
+      console.error("File upload failed:", e);
+      addMessage({
+        role: "assistant",
+        content: `文件上传失败: ${(e as Error).message || String(e)}`,
+      });
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
