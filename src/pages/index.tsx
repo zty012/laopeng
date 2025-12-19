@@ -225,7 +225,7 @@ export default function Home() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-1/2 flex-col py-8">
+    <div className="mx-auto flex size-full flex-col p-8">
       <div
         className="flex flex-1 flex-col gap-2 overflow-y-auto"
         ref={messagesElRef}
