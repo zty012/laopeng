@@ -15,7 +15,7 @@ export interface Conversation {
   agentId?: string;
   messages: (OpenAI.ChatCompletionMessageParam & {
     tokens?: number;
-    reasoning_content?: string;
+    reasoning?: string;
     attachments?: Attachment[];
   })[];
   createdAt: Date;
@@ -26,7 +26,7 @@ interface ConversationContextType {
   currentConversationId: string | null;
   currentMessages: (OpenAI.ChatCompletionMessageParam & {
     tokens?: number;
-    reasoning_content?: string;
+    reasoning?: string;
     attachments?: Attachment[];
   })[];
   createNewConversation: (

@@ -5,6 +5,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { AGENTS } from "@/lib/agents";
 import { AITools } from "@/lib/aiTools";
@@ -27,6 +29,7 @@ import { Fragment } from "react/jsx-runtime";
 export default function Home() {
   const [inputValue, setInputValue] = useState("");
   const [requesting, setRequesting] = useState(false);
+  const [enableDeepThinking, setEnableDeepThinking] = useState(false);
   const messagesElRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const {
@@ -139,31 +142,32 @@ export default function Home() {
         return rest as OpenAI.ChatCompletionMessageParam;
       });
 
-      const stream = await openai.chat.completions.create({
-        model: "doubao-seed-1.6-thinking",
+      const stream = (await openai.chat.completions.create({
+        model: "deepseek/deepseek-v3.2",
         messages: processedMsgs,
         stream: true,
         tools: AITools.tools,
         tool_choice: "auto",
-      });
+        include_reasoning: enableDeepThinking,
+      } as any)) as unknown as AsyncIterable<OpenAI.ChatCompletionChunk>;
       addMessage({
         role: "assistant",
         content: "Requesting...",
       });
       const streamingMsg: OpenAI.ChatCompletionAssistantMessageParam & {
-        reasoning_content: string;
+        reasoning: string;
       } = {
         role: "assistant",
         content: "",
-        reasoning_content: "",
+        reasoning: "",
         tool_calls: [],
       };
       let lastChunk: OpenAI.ChatCompletionChunk | null = null;
       for await (const chunk of stream) {
         const delta = chunk.choices[0].delta;
         streamingMsg.content! += delta.content ?? "";
-        if ("reasoning_content" in delta) {
-          streamingMsg.reasoning_content! += delta.reasoning_content ?? "";
+        if ("reasoning" in delta) {
+          streamingMsg.reasoning! += delta.reasoning ?? "";
         }
         const toolCalls = delta.tool_calls || [];
 
@@ -291,7 +295,7 @@ export default function Home() {
             </div>
           ) : msg.role === "assistant" ? (
             <div key={i} className="flex flex-col gap-2">
-              {msg.reasoning_content && (
+              {msg.reasoning && (
                 <Collapsible className="group/collapsible" defaultOpen>
                   <CollapsibleTrigger className="flex items-center gap-2">
                     <BrainCircuit />
@@ -300,7 +304,7 @@ export default function Home() {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-2 animate-none! rounded-lg border px-3 py-2 opacity-50">
                     <span className="text-sm">
-                      <Markdown source={msg.reasoning_content} />
+                      <Markdown source={msg.reasoning} />
                     </span>
                   </CollapsibleContent>
                 </Collapsible>
@@ -370,6 +374,19 @@ export default function Home() {
             onClick={() => fileInputRef.current?.click()}
           />
           <div className="flex-1"></div>
+          <div className="mr-4 flex items-center gap-2">
+            <Switch
+              id="deep-thinking"
+              checked={enableDeepThinking}
+              onCheckedChange={setEnableDeepThinking}
+            />
+            <Label
+              htmlFor="deep-thinking"
+              className="text-muted-foreground cursor-pointer text-xs"
+            >
+              深度思考
+            </Label>
+          </div>
           {requesting ? (
             <Loader2 className="animate-spin" />
           ) : (
