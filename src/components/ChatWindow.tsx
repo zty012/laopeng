@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Bot } from 'lucide-react';
 import { sendMessage } from '../lib/agent';
 import { getAgent } from '../lib/agents';
@@ -76,7 +75,7 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
 
   return (
     <div className="flex flex-col flex-1 h-full overflow-hidden">
-      <ScrollArea className="flex-1 px-4">
+      <div className="flex-1 min-h-0 overflow-y-auto px-4">
         <div className="py-6 flex flex-col">
           {messages.length === 0 && !loading && (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
@@ -94,7 +93,7 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
           ))}
           <div ref={endRef} />
         </div>
-      </ScrollArea>
+      </div>
       <ChatInput key={conversation?.id ?? 'new'} onSend={handleSend} disabled={loading} initialValue={initialQuery} />
     </div>
   );
