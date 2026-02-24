@@ -2,18 +2,21 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, BookOpen, Microscope, MessageCircle, Lightbulb, Newspaper } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import PortalLayout from '../components/PortalLayout';
+import { fetchHomeData, type HomeData } from '../lib/newsSearch';
 
-const DAILY_TOPIC = {
-  title: '在信息爆炸的时代，"慢阅读"还有价值吗？',
-  tags: ['思辨', '语文', '时政'],
-  hint: '提示：可以从"深度 vs 碎片"、"专注力"等角度切入',
-};
-
-const DAILY_NEWS = {
-  title: '教育部发布新课标：跨学科主题学习将占课时10%以上',
-  source: '人民教育',
-  date: '今日',
+const FALLBACK: HomeData = {
+  topic: {
+    title: '在信息爆炸的时代，"慢阅读"还有价值吗？',
+    hint: '提示：可以从"深度 vs 碎片"、"专注力"等角度切入',
+    tags: ['思辨', '语文', '时政'],
+  },
+  headline: {
+    title: '教育部发布新课标：跨学科主题学习将占课时10%以上',
+    source: '人民教育',
+    date: '今日',
+  },
 };
 
 const COLUMNS = [
@@ -52,29 +55,50 @@ const COLUMNS = [
 ];
 
 export default function Home() {
+  const [data, setData] = useState<HomeData>(FALLBACK);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHomeData()
+      .then(setData)
+      .catch(() => setData(FALLBACK))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const today = new Date().toLocaleDateString('zh-CN', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  });
+
   return (
     <PortalLayout>
       <div className="h-full flex flex-col px-10 py-8 gap-8 overflow-auto">
         <div>
           <h1 className="text-2xl font-bold">今日概览</h1>
-          <p className="text-sm text-muted-foreground mt-1">2026年2月22日 · 星期日</p>
+          <p className="text-sm text-muted-foreground mt-1">{today}</p>
         </div>
 
         {/* Top row: 今日思辨主题 + 今日新闻 */}
         <div className="grid grid-cols-3 gap-6">
-          <Link to={`/chat?q=${encodeURIComponent(`今日思辨主题：${DAILY_TOPIC.title}\n\n${DAILY_TOPIC.hint}\n\n请帮我从多个角度分析这个话题，给出思辨写作的思路和论点。`)}`} className="col-span-2">
+          <Link to={`/chat?q=${encodeURIComponent(`今日思辨主题：${data.topic.title}\n\n${data.topic.hint}\n\n请帮我从多个角度分析这个话题，给出思辨写作的思路和论点。`)}`} className="col-span-2">
             <Card className="bg-linear-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/50 transition-all cursor-pointer group h-full">
               <CardContent className="p-8 flex flex-col gap-4 h-full min-h-52">
                 <div className="flex items-center gap-2 text-primary">
                   <Lightbulb className="size-5" />
                   <span className="text-xs font-semibold uppercase tracking-widest">今日思辨主题</span>
                 </div>
-                <h2 className="text-2xl font-bold leading-snug text-foreground flex-1">
-                  {DAILY_TOPIC.title}
-                </h2>
+                {loading ? (
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="h-7 w-3/4 rounded bg-muted/60 animate-pulse" />
+                    <div className="h-5 w-1/2 rounded bg-muted/40 animate-pulse" />
+                  </div>
+                ) : (
+                  <h2 className="text-2xl font-bold leading-snug text-foreground flex-1">
+                    {data.topic.title}
+                  </h2>
+                )}
                 <div className="flex items-center justify-between">
                   <div className="flex gap-2">
-                    {DAILY_TOPIC.tags.map(t => (
+                    {data.topic.tags.map(t => (
                       <Badge key={t} variant="secondary">{t}</Badge>
                     ))}
                   </div>
@@ -82,7 +106,7 @@ export default function Home() {
                     开始思辨 <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground border-t border-border pt-3">{DAILY_TOPIC.hint}</p>
+                <p className="text-sm text-muted-foreground border-t border-border pt-3">{data.topic.hint}</p>
               </CardContent>
             </Card>
           </Link>
@@ -94,11 +118,18 @@ export default function Home() {
                   <Newspaper className="size-5" />
                   <span className="text-xs font-semibold uppercase tracking-widest">今日新闻</span>
                 </div>
-                <h2 className="text-lg font-bold leading-snug text-foreground flex-1">{DAILY_NEWS.title}</h2>
+                {loading ? (
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="h-5 w-full rounded bg-muted/60 animate-pulse" />
+                    <div className="h-5 w-4/5 rounded bg-muted/40 animate-pulse" />
+                  </div>
+                ) : (
+                  <h2 className="text-lg font-bold leading-snug text-foreground flex-1">{data.headline.title}</h2>
+                )}
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>{DAILY_NEWS.source}</span>
+                  <span>{data.headline.source}</span>
                   <span className="group-hover:text-foreground transition-colors flex items-center gap-1.5">
-                    {DAILY_NEWS.date} <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
+                    {data.headline.date} <ArrowRight className="size-4 group-hover:translate-x-0.5 transition-transform" />
                   </span>
                 </div>
               </CardContent>

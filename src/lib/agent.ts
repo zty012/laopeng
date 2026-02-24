@@ -22,7 +22,7 @@ function toLC(messages: Message[]): BaseMessage[] {
 export async function sendMessage(
   messages: Message[],
   systemPrompt: string,
-  onToken: (token: string) => void
+  onToken: (token: string) => void,
 ): Promise<string> {
   const llm = createLLM();
   const llmWithTools = toolRegistry.length > 0 ? llm.bindTools(toolRegistry) : llm;
