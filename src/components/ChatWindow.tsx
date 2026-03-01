@@ -80,7 +80,7 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
           {messages.length === 0 && !loading && (
             <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
               <Bot className="size-14 opacity-40" />
-              <h2 className="text-lg font-semibold text-foreground">你好，我是 AI 助手</h2>
+              <h2 className="text-lg font-semibold text-foreground">你好，我是老彭</h2>
               <p className="text-sm">有什么可以帮你的？</p>
             </div>
           )}
