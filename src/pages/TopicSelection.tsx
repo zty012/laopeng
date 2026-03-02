@@ -1,4 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -44,17 +47,17 @@ const CATEGORIES = [
 export default function TopicSelection() {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleContinue = () => {
     if (selected) {
-      navigate(`/interdisciplinary/search?category=${selected}`);
+      router.push(`/interdisciplinary/search?category=${selected}`);
     }
   };
 
   const handleAsk = () => {
     if (query.trim()) {
-      navigate(`/chat?q=${encodeURIComponent(query)}`);
+      router.push(`/chat?q=${encodeURIComponent(query)}`);
     }
   };
 
@@ -64,7 +67,7 @@ export default function TopicSelection() {
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/interdisciplinary" className="text-muted-foreground hover:text-foreground transition-colors">
+            <Link href="/interdisciplinary" className="text-muted-foreground hover:text-foreground transition-colors">
               <ArrowLeft className="size-5" />
             </Link>
             <div>

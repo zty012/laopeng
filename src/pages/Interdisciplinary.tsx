@@ -1,4 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Search, FileText, BarChart2, Target, MessageCircle } from 'lucide-react';
@@ -51,11 +54,11 @@ const STEPS = [
 export default function Interdisciplinary() {
   const [query, setQuery] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-  const navigate = useNavigate();
+  const router = useRouter();
 
   const handleAsk = () => {
     if (!query.trim()) return;
-    navigate(`/chat?q=${encodeURIComponent(query)}`);
+    router.push(`/chat?q=${encodeURIComponent(query)}`);
   };
 
   return (
@@ -93,7 +96,7 @@ export default function Interdisciplinary() {
               </Card>
             );
             return step.to ? (
-              <Link to={step.to} key={step.id}>{content}</Link>
+              <Link href={step.to} key={step.id}>{content}</Link>
             ) : (
               <div key={step.id}>{content}</div>
             );

@@ -1,4 +1,7 @@
-import { Link, useLocation } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Globe, Newspaper, BookOpen, Microscope, MessageCircle } from 'lucide-react';
 import {
   Sidebar,
@@ -23,7 +26,7 @@ const NAV = [
 ];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  const { pathname } = useLocation();
+  const pathname = usePathname() ?? '/';
 
   return (
     <SidebarProvider>
@@ -44,7 +47,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   return (
                     <SidebarMenuItem key={to}>
                       <SidebarMenuButton asChild isActive={active}>
-                        <Link to={to}>
+                        <Link href={to}>
                           <Icon />
                           <span>{label}</span>
                         </Link>
@@ -61,7 +64,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>
-                <Link to="/chat">
+                <Link href="/chat">
                   <MessageCircle />
                   <span>来聊聊天吧</span>
                 </Link>

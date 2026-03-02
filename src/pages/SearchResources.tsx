@@ -1,4 +1,7 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +10,7 @@ import {
   Globe, BookOpen, Database, Microscope, FileSearch,
   ExternalLink,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import PortalLayout from '../components/PortalLayout';
 
 /* ----------------------------------------
@@ -118,10 +121,10 @@ const TIPS = [
    Component
 ------------------------------------------*/
 
-export default function SearchResources() {
-  const [searchParams] = useSearchParams();
-  const category = searchParams.get('category') ?? '';
-  const navigate = useNavigate();
+function SearchResourcesContent() {
+  const searchParams = useSearchParams();
+  const category = searchParams?.get('category') ?? '';
+  const router = useRouter();
   const [query, setQuery] = useState('');
 
   const filteredDBs = DATABASES.filter(
@@ -130,7 +133,7 @@ export default function SearchResources() {
 
   const handleAsk = () => {
     if (query.trim()) {
-      navigate(`/chat?q=${encodeURIComponent(query)}`);
+      router.push(`/chat?q=${encodeURIComponent(query)}`);
     }
   };
 
@@ -142,7 +145,7 @@ export default function SearchResources() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              to={`/interdisciplinary/topic${category ? `?preselect=${category}` : ''}`}
+              href={`/interdisciplinary/topic${category ? `?preselect=${category}` : ''}`}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="size-5" />
@@ -159,7 +162,7 @@ export default function SearchResources() {
               </h1>
             </div>
           </div>
-          <Button size="lg" className="gap-2" onClick={() => navigate(`/interdisciplinary/text${category ? `?category=${category}` : ''}`)}>
+          <Button size="lg" className="gap-2" onClick={() => router.push(`/interdisciplinary/text${category ? `?category=${category}` : ''}`)}>
             <CheckCircle className="size-4" />
             已完成，下一步
             <ArrowRight className="size-4" />
@@ -270,5 +273,13 @@ export default function SearchResources() {
 
       </div>
     </PortalLayout>
+  );
+}
+
+export default function SearchResources() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <SearchResourcesContent />
+    </Suspense>
   );
 }

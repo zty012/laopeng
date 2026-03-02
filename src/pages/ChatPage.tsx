@@ -1,14 +1,18 @@
-import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+"use client";
+
+import { useState, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Sidebar from '../components/Sidebar';
 import ChatWindow from '../components/ChatWindow';
 import { useConversations } from '../store/useConversations';
 import { agents, DEFAULT_AGENT_ID } from '../lib/agents';
 
-export default function ChatPage() {
-  const [searchParams] = useSearchParams();
-  const paramAgent = searchParams.get('agent');
-  const paramQ = searchParams.get('q');
+export const dynamic = 'force-dynamic';
+
+function ChatContent() {
+  const searchParams = useSearchParams();
+  const paramAgent = searchParams?.get('agent');
+  const paramQ = searchParams?.get('q');
 
   const [selectedAgentId, setSelectedAgentId] = useState<string>(
     paramAgent && agents.find(a => a.id === paramAgent) ? paramAgent : DEFAULT_AGENT_ID
@@ -47,5 +51,13 @@ export default function ChatPage() {
           initialQuery={paramQ ?? undefined}
         />
       </div>
+  );
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ChatContent />
+    </Suspense>
   );
 }

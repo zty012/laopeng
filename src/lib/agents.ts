@@ -20,32 +20,43 @@ function parseFrontmatter(raw: string): { name: string; description: string; pro
 }
 
 /**
- * 通过 import.meta.glob 动态加载 src/prompts/*.md
+ * 手动加载所有智能体 prompt 文件
  * 每个文件即一个智能体，文件名（不含扩展名）为 id
  */
-const modules = import.meta.glob('../prompts/*.md', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>;
+import allusionTracer from '../prompts/allusion-tracer';
+import defaultPrompt from '../prompts/default';
+import famousLines from '../prompts/famous-lines';
+import imageryLibrary from '../prompts/imagery-library';
+import rhetoricCoach from '../prompts/rhetoric-coach';
+import translator from '../prompts/translator';
+import wordExplainer from '../prompts/word-explainer';
+
+const promptFiles: Record<string, string> = {
+  'allusion-tracer': allusionTracer,
+  'default': defaultPrompt,
+  'famous-lines': famousLines,
+  'imagery-library': imageryLibrary,
+  'rhetoric-coach': rhetoricCoach,
+  'translator': translator,
+  'word-explainer': wordExplainer,
+};
 
 export const DEFAULT_AGENT_ID = 'default';
 
-export const agents: Agent[] = Object.entries(modules)
-  .map(([path, raw]) => {
-    const id = path.replace(/^.*\/(.+)\.md$/, '$1');
+export const agents: Agent[] = Object.entries(promptFiles)
+  .map(([id, raw]) => {
     const { name, description, prompt } = parseFrontmatter(raw);
     return { id, name, description, systemPrompt: prompt };
   })
   .sort((a, b) => (a.id === 'default' ? -1 : b.id === 'default' ? 1 : a.name.localeCompare(b.name)));
 
 // 提取 default 智能体的提示词，作为所有智能体的公共前缀
-const defaultPrompt = agents.find((a) => a.id === DEFAULT_AGENT_ID)?.systemPrompt ?? '';
+const baseDefaultPrompt = agents.find((a) => a.id === DEFAULT_AGENT_ID)?.systemPrompt ?? '';
 
 // 非 default 智能体在自身提示词前追加 default 提示词
 for (const agent of agents) {
-  if (agent.id !== DEFAULT_AGENT_ID && defaultPrompt) {
-    agent.systemPrompt = `${defaultPrompt}\n\n---\n\n${agent.systemPrompt}`;
+  if (agent.id !== DEFAULT_AGENT_ID && baseDefaultPrompt) {
+    agent.systemPrompt = `${baseDefaultPrompt}\n\n---\n\n${agent.systemPrompt}`;
   }
 }
 

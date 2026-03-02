@@ -1,4 +1,7 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +9,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle, MessageCircle,
   BarChart2, Palette, MonitorPlay, Layout,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import PortalLayout from '../components/PortalLayout';
 
 /* ----------------------------------------
@@ -96,16 +99,16 @@ const CATEGORY_LABELS: Record<string, string> = {
    Component
 ------------------------------------------*/
 
-export default function InfoOutput() {
-  const [searchParams] = useSearchParams();
-  const category = searchParams.get('category') ?? '';
-  const navigate = useNavigate();
+function InfoOutputContent() {
+  const searchParams = useSearchParams();
+  const category = searchParams?.get('category') ?? '';
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [selected, setSelected] = useState<string | null>(null);
 
   const handleAsk = (q?: string) => {
     const text = q ?? query;
-    if (text.trim()) navigate(`/chat?q=${encodeURIComponent(text)}`);
+    if (text.trim()) router.push(`/chat?q=${encodeURIComponent(text)}`);
   };
 
   const selectedInfo = INFO_TYPES.find(t => t.id === selected);
@@ -118,7 +121,7 @@ export default function InfoOutput() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              to={`/interdisciplinary/text${category ? `?category=${category}` : ''}`}
+              href={`/interdisciplinary/text${category ? `?category=${category}` : ''}`}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="size-5" />
@@ -138,7 +141,7 @@ export default function InfoOutput() {
           <Button
             size="lg"
             className="gap-2"
-            onClick={() => navigate('/interdisciplinary')}
+            onClick={() => router.push('/interdisciplinary')}
           >
             <CheckCircle className="size-4" />
             全部完成，返回总览
@@ -269,5 +272,13 @@ export default function InfoOutput() {
 
       </div>
     </PortalLayout>
+  );
+}
+
+export default function InfoOutput() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <InfoOutputContent />
+    </Suspense>
   );
 }

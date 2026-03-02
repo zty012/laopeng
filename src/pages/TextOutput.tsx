@@ -1,4 +1,7 @@
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -6,7 +9,7 @@ import {
   ArrowLeft, ArrowRight, CheckCircle, MessageCircle,
   FileText, AlignLeft, List, Quote, Lightbulb,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import PortalLayout from '../components/PortalLayout';
 
 /* ----------------------------------------
@@ -88,16 +91,16 @@ const CATEGORY_LABELS: Record<string, string> = {
    Component
 ------------------------------------------*/
 
-export default function TextOutput() {
-  const [searchParams] = useSearchParams();
-  const category = searchParams.get('category') ?? '';
-  const navigate = useNavigate();
+function TextOutputContent() {
+  const searchParams = useSearchParams();
+  const category = searchParams?.get('category') ?? '';
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
 
   const handleAsk = (q?: string) => {
     const text = q ?? query;
-    if (text.trim()) navigate(`/chat?q=${encodeURIComponent(text)}`);
+    if (text.trim()) router.push(`/chat?q=${encodeURIComponent(text)}`);
   };
 
   return (
@@ -108,7 +111,7 @@ export default function TextOutput() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link
-              to={`/interdisciplinary/search${category ? `?category=${category}` : ''}`}
+              href={`/interdisciplinary/search${category ? `?category=${category}` : ''}`}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="size-5" />
@@ -128,7 +131,7 @@ export default function TextOutput() {
           <Button
             size="lg"
             className="gap-2"
-            onClick={() => navigate(`/interdisciplinary/info${category ? `?category=${category}` : ''}`)}
+            onClick={() => router.push(`/interdisciplinary/info${category ? `?category=${category}` : ''}`)}
           >
             <CheckCircle className="size-4" />
             已完成，下一步
@@ -256,5 +259,13 @@ export default function TextOutput() {
 
       </div>
     </PortalLayout>
+  );
+}
+
+export default function TextOutput() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <TextOutputContent />
+    </Suspense>
   );
 }

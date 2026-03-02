@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
 import PortalLayout from '../components/PortalLayout';
@@ -58,7 +60,7 @@ export default function Poetry() {
         </div>
         <div className="grid grid-cols-3 gap-5">
           {POETRY_AGENTS.map((agent) => (
-            <Link key={agent.id} to={`/chat?agent=${agent.id}`}>
+            <Link key={agent.id} href={`/chat?agent=${agent.id}`}>
               <Card className={`bg-linear-to-br ${agent.color} cursor-pointer transition-all hover:scale-[1.02] group h-full`}>
                 <CardContent className="p-6 flex flex-col gap-4 h-full min-h-44">
                   <span className="text-3xl">{agent.icon}</span>

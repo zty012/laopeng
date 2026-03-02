@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, ExternalLink } from 'lucide-react';
@@ -74,14 +76,14 @@ export default function News() {
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">{item.summary}</p>
                     <div className="flex items-center gap-4 pt-3 border-t border-border/50">
                       <Link
-                        to={`/chat?q=${encodeURIComponent(item.agentQuery)}`}
+                        href={`/chat?q=${encodeURIComponent(item.agentQuery)}`}
                         className="flex items-center gap-1.5 text-sm text-primary hover:text-primary/80 transition-colors"
                       >
                         请老彭解读 <ArrowRight className="size-3.5" />
                       </Link>
                       <span className="text-border">·</span>
                       <Link
-                        to="/interdisciplinary/topic"
+                        href="/interdisciplinary/topic"
                         className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
                       >
                         以此选题 <ExternalLink className="size-3.5" />

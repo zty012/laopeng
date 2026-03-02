@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, BookOpen, Microscope, MessageCircle, Lightbulb, Newspaper } from 'lucide-react';
@@ -79,7 +81,7 @@ export default function Home() {
 
         {/* Top row: 今日思辨主题 + 今日新闻 */}
         <div className="grid grid-cols-3 gap-6">
-          <Link to={`/chat?q=${encodeURIComponent(`今日思辨主题：${data.topic.title}\n\n${data.topic.hint}\n\n请帮我从多个角度分析这个话题，给出思辨写作的思路和论点。`)}`} className="col-span-2">
+          <Link href={`/chat?q=${encodeURIComponent(`今日思辨主题：${data.topic.title}\n\n${data.topic.hint}\n\n请帮我从多个角度分析这个话题，给出思辨写作的思路和论点。`)}`} className="col-span-2">
             <Card className="bg-linear-to-br from-primary/10 to-primary/5 border-primary/20 hover:border-primary/50 transition-all cursor-pointer group h-full">
               <CardContent className="p-8 flex flex-col gap-4 h-full min-h-52">
                 <div className="flex items-center gap-2 text-primary">
@@ -111,7 +113,7 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link to="/news">
+          <Link href="/news">
             <Card className="bg-linear-to-br from-sky-500/10 to-sky-600/5 border-sky-500/20 hover:border-sky-500/50 transition-all cursor-pointer group h-full">
               <CardContent className="p-8 flex flex-col gap-4 h-full min-h-52">
                 <div className="flex items-center gap-2 text-sky-400">
@@ -140,7 +142,7 @@ export default function Home() {
         {/* Bottom row: 4 columns */}
         <div className="grid grid-cols-4 gap-6">
           {COLUMNS.map((col) => (
-            <Link to={col.to} key={col.to}>
+            <Link href={col.to} key={col.to}>
               <Card className={`bg-linear-to-br ${col.color} cursor-pointer transition-all hover:scale-[1.02] group h-full`}>
                 <CardContent className="p-6 flex flex-col gap-4 h-full min-h-44">
                   <div className="flex items-start justify-between">

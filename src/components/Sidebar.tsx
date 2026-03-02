@@ -1,8 +1,10 @@
-import { Link } from 'react-router-dom';
+"use client";
+
+import Link from 'next/link';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { Plus, Trash2, MessageSquare, Home } from 'lucide-react';
 import type { Agent, Conversation } from '../types';
 import AgentPicker from './AgentPicker';
@@ -23,29 +25,30 @@ export default function Sidebar({
   agents, selectedAgentId, onAgentChange,
 }: Props) {
   return (
-    <aside className="flex flex-col w-60 shrink-0 border-r border-border bg-card h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 shrink-0">
-        <div className="flex items-center gap-2">
+    <TooltipProvider>
+      <aside className="flex flex-col w-60 shrink-0 border-r border-border bg-card h-full">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+                  <Home className="size-4" />
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent side="right">返回首页</TooltipContent>
+            </Tooltip>
+            <MessageSquare className="size-4 text-primary" />
+            <span className="font-semibold text-sm">老彭 AI</span>
+          </div>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Link to="/" className="text-muted-foreground hover:text-foreground transition-colors">
-                <Home className="size-4" />
-              </Link>
+              <Button variant="ghost" size="icon" className="size-7" onClick={onNew}>
+                <Plus className="size-4" />
+              </Button>
             </TooltipTrigger>
-            <TooltipContent side="right">返回首页</TooltipContent>
+            <TooltipContent side="right">新建对话</TooltipContent>
           </Tooltip>
-          <MessageSquare className="size-4 text-primary" />
-          <span className="font-semibold text-sm">老彭 AI</span>
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-7" onClick={onNew}>
-              <Plus className="size-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent side="right">新建对话</TooltipContent>
-        </Tooltip>
       </div>
 
       {/* Agent picker for new conversations */}
@@ -100,5 +103,6 @@ export default function Sidebar({
         )}
       </ScrollArea>
     </aside>
+    </TooltipProvider>
   );
 }
