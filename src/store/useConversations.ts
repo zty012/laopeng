@@ -80,14 +80,18 @@ export function useConversations() {
   }, []);
 
   const updateLastAssistantMessage = useCallback(
-    (convId: string, content: string) => {
+    (convId: string, content: string, reasoning?: string) => {
       setConversations((prev) => {
         const next = prev.map((c) => {
           if (c.id !== convId) return c;
           const messages = [...c.messages];
           const lastIdx = messages.length - 1;
           if (lastIdx >= 0 && messages[lastIdx].role === 'assistant') {
-            messages[lastIdx] = { ...messages[lastIdx], content };
+            messages[lastIdx] = { 
+              ...messages[lastIdx], 
+              content,
+              ...(reasoning !== undefined && { reasoning })
+            };
           }
           return { ...c, messages, updatedAt: Date.now() };
         });

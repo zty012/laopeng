@@ -5,14 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { Bot } from 'lucide-react';
 import { sendMessage } from '../lib/agent';
 import { getAgent } from '../lib/agents';
-import type { Conversation, Message } from '../types';
+import type { Conversation, Message, MessageAttachment } from '../types';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
 
 interface Props {
   conversation: Conversation | null;
   onAddMessage: (convId: string, message: Message) => void;
-  onUpdateLast: (convId: string, content: string) => void;
+  onUpdateLast: (convId: string, content: string, reasoning?: string) => void;
   onNew: () => Conversation;
   initialQuery?: string;
 }
@@ -20,13 +20,14 @@ interface Props {
 export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, onNew, initialQuery }: Props) {
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
+  const [streamingReasoning, setStreamingReasoning] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages.length, streamingContent]);
 
-  const handleSend = async (text: string) => {
+  const handleSend = async (text: string, attachments?: MessageAttachment[]) => {
     let conv = conversation;
     if (!conv) {
       conv = onNew();
@@ -37,6 +38,7 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
       role: 'user',
       content: text,
       timestamp: Date.now(),
+      attachments,
     };
     onAddMessage(conv.id, userMsg);
 
@@ -51,24 +53,41 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
 
     setLoading(true);
     setStreamingContent('');
+    setStreamingReasoning('');
 
     const allMessages = [...(conv.messages ?? []), userMsg];
     const systemPrompt = getAgent(conv.agentId).systemPrompt;
     let accumulated = '';
+    let reasoningAccumulated = '';
 
     try {
-      const final = await sendMessage(allMessages, systemPrompt, (token) => {
-        accumulated += token;
-        setStreamingContent(accumulated);
-        onUpdateLast(conv!.id, accumulated);
-      });
-      onUpdateLast(conv.id, final || accumulated);
+      const result = await sendMessage(
+        allMessages,
+        systemPrompt,
+        (token) => {
+          accumulated += token;
+          setStreamingContent(accumulated);
+          onUpdateLast(conv!.id, accumulated);
+        },
+        (reasoning) => {
+          reasoningAccumulated = reasoning;
+          setStreamingReasoning(reasoning);
+        }
+      );
+      
+      // 更新最终消息，包含推理过程
+      const finalContent = result.content || accumulated;
+      const finalReasoning = result.reasoning || reasoningAccumulated;
+      
+      // 更新最后一条助手消息，包含内容和推理过程
+      onUpdateLast(conv.id, finalContent, finalReasoning || undefined);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
       onUpdateLast(conv.id, `❌ 请求失败：${msg}`);
     } finally {
       setLoading(false);
       setStreamingContent('');
+      setStreamingReasoning('');
     }
   };
 
