@@ -134,7 +134,7 @@ export async function sendMessage(
 
     // 检查是否有 set_mermaid 调用
     const hasMermaidCall = toolCalls.some((tc) => tc.name === "set_mermaid");
-    
+
     // 如果已经使用过 set_mermaid，从后续调用中移除
     const filteredToolCalls = toolCalls.filter((tc) => {
       if (tc.name === "set_mermaid") {
