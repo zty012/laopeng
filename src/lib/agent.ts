@@ -93,6 +93,7 @@ export async function sendMessage(
 
   // 循环处理工具调用（agentic loop）
   let toolCallCount = 0;
+  let lastMermaidCode: string | undefined;
 
   // eslint-disable-next-line no-constant-condition
   while (true) {
@@ -143,6 +144,10 @@ export async function sendMessage(
       onReasoning?.(reasoningContent);
     }
 
+    // 收集所有 set_mermaid 调用，只保留最后一个
+    const mermaidCalls = toolCalls.filter(tc => tc.name === "set_mermaid");
+    const lastMermaidCall = mermaidCalls.length > 0 ? mermaidCalls[mermaidCalls.length - 1] : null;
+    
     // 执行所有工具调用
     for (const tc of toolCalls) {
       const foundTool = toolRegistry.find((t) => t.name === tc.name);
@@ -154,15 +159,27 @@ export async function sendMessage(
           };
           const toolArgs = tc.args as Record<string, unknown>;
 
-          // 特殊处理 set_mermaid 工具
-          if (tc.name === "set_mermaid" && onMermaidUpdate) {
+          // 特殊处理 set_mermaid 工具：只执行最后一次调用
+          if (tc.name === "set_mermaid") {
             const code = toolArgs.code as string;
-            if (code) {
-              onMermaidUpdate(code);
+            
+            // 如果不是最后一次调用，跳过执行
+            if (lastMermaidCall && tc.id !== lastMermaidCall.id) {
+              result = "已跳过（重复调用）";
+            } else if (code && onMermaidUpdate) {
+              // 只有代码不同才更新
+              if (code !== lastMermaidCode) {
+                onMermaidUpdate(code);
+                lastMermaidCode = code;
+              } else {
+                result = "代码相同，未更新";
+              }
             }
           }
 
-          result = String(await invokable.invoke(tc.args));
+          if (tc.name !== "set_mermaid" || result === "工具未找到") {
+            result = String(await invokable.invoke(tc.args));
+          }
         } catch (e) {
           result = `工具执行错误：${e}`;
         }
