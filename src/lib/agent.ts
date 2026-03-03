@@ -151,9 +151,6 @@ export async function sendMessage(
     if (filteredToolCalls.length === 0 && toolCalls.length > 0) {
       break;
     }
-    
-    // 如果本次使用了 set_mermaid，执行后直接结束对话
-    const willUseMermaid = hasMermaidCall && !mermaidToolUsed;
 
     // 流式记录工具调用过程（只记录未过滤的）
     for (const tc of filteredToolCalls) {
@@ -214,12 +211,6 @@ export async function sendMessage(
       reasoningContent += `\n\n**工具返回**: \`\`\`\n${result}\n\`\`\``;
       onReasoning?.(reasoningContent);
     }
-    
-    // 如果使用了 set_mermaid，直接结束对话
-    if (willUseMermaid) {
-      break;
-    }
-    
     // 不再重置 fullResponse，保留已生成的内容
     // fullResponse = "";
   }
