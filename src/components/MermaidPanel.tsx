@@ -45,7 +45,7 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
         primaryColor: '#444444',
         primaryTextColor: '#ffffff',
         primaryBorderColor: '#666666',
-        lineColor: '#888888',
+        lineColor: '#ffffff',
         secondaryColor: '#444444',
         tertiaryColor: '#444444',
         mainBkg: '#333333',
