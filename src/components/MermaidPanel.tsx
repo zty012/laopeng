@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import mermaid from 'mermaid';
-import { X, Maximize2, Minimize2 } from 'lucide-react';
+import { X, Maximize2, Minimize2, ZoomIn, ZoomOut, Move } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -29,6 +29,10 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
   const [selectedNodes, setSelectedNodes] = useState<Set<string>>(new Set());
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const [scale, setScale] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
   // 初始化 mermaid
   useEffect(() => {
@@ -88,6 +92,10 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
           containerRef.current.innerHTML = svg;
           svgRef.current = containerRef.current.querySelector('svg');
           
+          // 重置缩放和平移
+          setScale(1);
+          setPosition({ x: 0, y: 0 });
+          
           // 提取节点信息
           extractNodes();
         }
@@ -99,6 +107,61 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
 
     renderMermaid();
   }, [mermaidCode, isOpen]);
+
+  // 处理滚轮缩放
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    
+    const zoomSensitivity = 0.001;
+    const delta = -e.deltaY * zoomSensitivity;
+    const newScale = Math.min(Math.max(0.1, scale + delta), 5);
+    
+    setScale(newScale);
+  }, [scale]);
+
+  // 处理鼠标按下开始平移
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // 只有点击背景时才平移（不是节点）
+    const target = e.target as Element;
+    if (target.closest('.node, .vertex, .actor, .classGroup, .entity, .pieSlice')) {
+      return;
+    }
+    
+    setIsPanning(true);
+    setPanStart({ x: e.clientX - position.x, y: e.clientY - position.y });
+  }, [position]);
+
+  // 处理鼠标移动进行平移
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isPanning) return;
+    
+    e.preventDefault();
+    const newX = e.clientX - panStart.x;
+    const newY = e.clientY - panStart.y;
+    
+    setPosition({ x: newX, y: newY });
+  }, [isPanning, panStart]);
+
+  // 处理鼠标释放停止平移
+  const handleMouseUp = useCallback(() => {
+    setIsPanning(false);
+  }, []);
+
+  // 放大
+  const handleZoomIn = () => {
+    setScale(prev => Math.min(prev + 0.25, 5));
+  };
+
+  // 缩小
+  const handleZoomOut = () => {
+    setScale(prev => Math.max(prev - 0.25, 0.1));
+  };
+
+  // 重置视图
+  const handleResetView = () => {
+    setScale(1);
+    setPosition({ x: 0, y: 0 });
+  };
 
   // 提取节点信息
   const extractNodes = useCallback(() => {
@@ -271,6 +334,39 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
       <div className="flex items-center justify-between p-3 border-b">
         <h3 className="font-semibold text-sm">Mermaid 图表</h3>
         <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 mr-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomOut}
+              className="h-7 w-7 p-0"
+              title="缩小"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-xs w-12 text-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomIn}
+              className="h-7 w-7 p-0"
+              title="放大"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetView}
+              className="h-7 px-2 text-xs"
+              title="重置视图"
+            >
+              <Move className="h-3 w-3 mr-1" />
+              重置
+            </Button>
+          </div>
           <Button
             variant="ghost"
             size="sm"
@@ -290,17 +386,31 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
         </div>
       </div>
       
-      <div className="p-4 h-[calc(100%-50px)] overflow-auto">
+      <div 
+        className="p-4 h-[calc(100%-50px)] overflow-hidden cursor-grab active:cursor-grabbing"
+        onWheel={handleWheel}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+      >
         {renderError ? (
           <div className="text-red-500 text-sm p-4">
             <p className="font-semibold mb-2">渲染错误:</p>
             <pre className="whitespace-pre-wrap text-xs">{renderError}</pre>
           </div>
         ) : (
-          <div 
-            ref={containerRef} 
-            className="w-full h-full flex items-center justify-center"
-          />
+          <div className="w-full h-full flex items-center justify-center overflow-hidden">
+            <div
+              style={{
+                transform: `translate(${position.x}px, ${position.y}px) scale(${scale})`,
+                transformOrigin: 'center center',
+                transition: isPanning ? 'none' : 'transform 0.1s ease-out',
+              }}
+              ref={containerRef}
+              className="inline-block"
+            />
+          </div>
         )}
       </div>
       
