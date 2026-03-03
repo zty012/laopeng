@@ -342,7 +342,7 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
   return (
     <Card className={`
       relative bg-background border-l shadow-lg transition-all duration-300 ease-in-out
-      ${isFullscreen ? 'fixed inset-4 z-50 m-auto w-fit h-fit' : 'w-1/2 h-full rounded-none'}
+      ${isFullscreen ? 'fixed inset-16 z-50 m-auto w-fit h-fit' : 'w-1/2 h-full rounded-none'}
       ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
     `}>
       <div className="flex items-center justify-between p-3 border-b">
