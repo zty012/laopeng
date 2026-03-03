@@ -10,9 +10,11 @@ interface Props {
   onSend: (text: string, attachments?: MessageAttachment[]) => void;
   disabled?: boolean;
   initialValue?: string;
+  selectedNodeCount?: number; // 选中的 Mermaid 节点数量
+  onClearNodeSelection?: () => void; // 清空节点选择
 }
 
-export default function ChatInput({ onSend, disabled, initialValue }: Props) {
+export default function ChatInput({ onSend, disabled, initialValue, selectedNodeCount = 0, onClearNodeSelection }: Props) {
   const [text, setText] = useState(initialValue ?? '');
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
@@ -345,6 +347,25 @@ export default function ChatInput({ onSend, disabled, initialValue }: Props) {
       )}
 
       <div className="flex items-end gap-2 px-4 py-3 border-t border-border bg-background shrink-0">
+        {/* 显示选中的节点数量 */}
+        {selectedNodeCount > 0 && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg shrink-0">
+            <span className="text-xs text-primary font-medium">
+              已选择 {selectedNodeCount} 个节点
+            </span>
+            {onClearNodeSelection && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearNodeSelection}
+                className="h-5 w-5 p-0 hover:bg-primary/20"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            )}
+          </div>
+        )}
+        
         <input
           ref={fileInputRef}
           type="file"

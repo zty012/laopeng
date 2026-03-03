@@ -3,11 +3,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { Bot } from 'lucide-react';
-import { sendMessage } from '../lib/agent';
+import { sendMessage, setMermaidCallback } from '../lib/agent';
 import { getAgent } from '../lib/agents';
-import type { Conversation, Message, MessageAttachment } from '../types';
+import type { Conversation, Message, MessageAttachment, MermaidState } from '../types';
 import MessageBubble from './MessageBubble';
 import ChatInput from './ChatInput';
+import MermaidPanel from './MermaidPanel';
 
 interface Props {
   conversation: Conversation | null;
@@ -21,11 +22,58 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
   const [loading, setLoading] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [streamingReasoning, setStreamingReasoning] = useState('');
+  const [mermaidState, setMermaidState] = useState<MermaidState>({
+    isOpen: false,
+    code: '',
+    selectedNodes: [],
+  });
   const endRef = useRef<HTMLDivElement>(null);
+
+  // 设置 Mermaid 回调
+  useEffect(() => {
+    setMermaidCallback((code: string) => {
+      setMermaidState(prev => ({
+        ...prev,
+        isOpen: true,
+        code: code,
+        selectedNodes: [],
+      }));
+    });
+
+    // 清理回调
+    return () => {
+      setMermaidCallback(null);
+    };
+  }, []);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [conversation?.messages.length, streamingContent]);
+
+  // 处理 Mermaid 节点选择
+  const handleNodeSelect = (nodeIds: string[]) => {
+    setMermaidState(prev => ({
+      ...prev,
+      selectedNodes: nodeIds,
+    }));
+  };
+
+  // 清空节点选择
+  const handleClearNodeSelection = () => {
+    setMermaidState(prev => ({
+      ...prev,
+      selectedNodes: [],
+    }));
+  };
+
+  // 关闭 Mermaid 面板
+  const handleCloseMermaid = () => {
+    setMermaidState(prev => ({
+      ...prev,
+      isOpen: false,
+      selectedNodes: [],
+    }));
+  };
 
   const handleSend = async (text: string, attachments?: MessageAttachment[]) => {
     let conv = conversation;
@@ -95,27 +143,44 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
   const isStreaming = loading && messages.length > 0 && messages[messages.length - 1].role === 'assistant';
 
   return (
-    <div className="flex flex-col flex-1 h-full overflow-hidden">
-      <div className="flex-1 min-h-0 overflow-y-auto px-4">
-        <div className="py-6 flex flex-col">
-          {messages.length === 0 && !loading && (
-            <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
-              <Bot className="size-14 opacity-40" />
-              <h2 className="text-lg font-semibold text-foreground">你好，我是老彭</h2>
-              <p className="text-sm">有什么可以帮你的？</p>
-            </div>
-          )}
-          {messages.map((msg, i) => (
-            <MessageBubble
-              key={msg.id}
-              message={msg}
-              isStreaming={isStreaming && i === messages.length - 1}
-            />
-          ))}
-          <div ref={endRef} />
+    <div className="flex flex-row flex-1 h-full overflow-hidden">
+      <div className="flex flex-col flex-1 h-full overflow-hidden">
+        <div className="flex-1 min-h-0 overflow-y-auto px-4">
+          <div className="py-6 flex flex-col">
+            {messages.length === 0 && !loading && (
+              <div className="flex flex-col items-center justify-center gap-3 py-20 text-muted-foreground">
+                <Bot className="size-14 opacity-40" />
+                <h2 className="text-lg font-semibold text-foreground">你好，我是老彭</h2>
+                <p className="text-sm">有什么可以帮你的？</p>
+              </div>
+            )}
+            {messages.map((msg, i) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                isStreaming={isStreaming && i === messages.length - 1}
+              />
+            ))}
+            <div ref={endRef} />
+          </div>
         </div>
+        <ChatInput 
+          key={conversation?.id ?? 'new'} 
+          onSend={handleSend} 
+          disabled={loading} 
+          initialValue={initialQuery}
+          selectedNodeCount={mermaidState.selectedNodes.length}
+          onClearNodeSelection={handleClearNodeSelection}
+        />
       </div>
-      <ChatInput key={conversation?.id ?? 'new'} onSend={handleSend} disabled={loading} initialValue={initialQuery} />
+      
+      {/* Mermaid 面板 */}
+      <MermaidPanel
+        mermaidCode={mermaidState.code}
+        isOpen={mermaidState.isOpen}
+        onClose={handleCloseMermaid}
+        onNodeSelect={handleNodeSelect}
+      />
     </div>
   );
 }

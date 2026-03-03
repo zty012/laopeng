@@ -28,3 +28,9 @@ export interface Conversation {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface MermaidState {
+  isOpen: boolean;
+  code: string;
+  selectedNodes: string[];
+}

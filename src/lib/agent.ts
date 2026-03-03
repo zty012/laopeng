@@ -11,6 +11,23 @@ import { toolRegistry } from "./tools";
 import type { Message } from "../types";
 
 /**
+ * Mermaid 工具调用回调类型
+ */
+export type MermaidCallback = (code: string) => void;
+
+/**
+ * 全局 Mermaid 回调
+ */
+let onMermaidUpdate: MermaidCallback | null = null;
+
+/**
+ * 设置 Mermaid 回调
+ */
+export function setMermaidCallback(callback: MermaidCallback | null) {
+  onMermaidUpdate = callback;
+}
+
+/**
  * 将应用内的 Message[] 转换为 LangChain BaseMessage[]
  */
 function toLC(messages: Message[]): BaseMessage[] {
@@ -130,6 +147,16 @@ export async function sendMessage(
           const invokable = foundTool as {
             invoke: (args: unknown) => Promise<unknown>;
           };
+          const toolArgs = tc.args as Record<string, unknown>;
+          
+          // 特殊处理 set_mermaid 工具
+          if (tc.name === 'set_mermaid' && onMermaidUpdate) {
+            const code = toolArgs.code as string;
+            if (code) {
+              onMermaidUpdate(code);
+            }
+          }
+          
           result = String(await invokable.invoke(tc.args));
         } catch (e) {
           result = `工具执行错误：${e}`;
