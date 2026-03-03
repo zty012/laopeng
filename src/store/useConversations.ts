@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
-import type { Conversation, Message } from '../types';
-import { DEFAULT_AGENT_ID } from '../lib/agents';
+import { useState, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
+import type { Conversation, Message } from "../types";
+import { DEFAULT_AGENT_ID } from "../lib/agents";
 
-const STORAGE_KEY = 'laopeng_conversations';
+const STORAGE_KEY = "laopeng_conversations";
 
 function load(): Conversation[] {
   try {
@@ -23,28 +23,32 @@ function save(convs: Conversation[]) {
 export function useConversations() {
   const [conversations, setConversations] = useState<Conversation[]>(load);
   const [activeId, setActiveId] = useState<string | null>(
-    () => load()[0]?.id ?? null
+    () => load()[0]?.id ?? null,
   );
 
-  const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
+  const activeConversation =
+    conversations.find((c) => c.id === activeId) ?? null;
 
-  const createConversation = useCallback((agentId: string = DEFAULT_AGENT_ID) => {
-    const conv: Conversation = {
-      id: uuidv4(),
-      title: '新对话',
-      messages: [],
-      agentId,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    };
-    setConversations((prev) => {
-      const next = [conv, ...prev];
-      save(next);
-      return next;
-    });
-    setActiveId(conv.id);
-    return conv;
-  }, []);
+  const createConversation = useCallback(
+    (agentId: string = DEFAULT_AGENT_ID) => {
+      const conv: Conversation = {
+        id: uuidv4(),
+        title: "新对话",
+        messages: [],
+        agentId,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      };
+      setConversations((prev) => {
+        const next = [conv, ...prev];
+        save(next);
+        return next;
+      });
+      setActiveId(conv.id);
+      return conv;
+    },
+    [],
+  );
 
   const deleteConversation = useCallback(
     (id: string) => {
@@ -59,7 +63,7 @@ export function useConversations() {
         return remaining[0]?.id ?? null;
       });
     },
-    [conversations]
+    [conversations],
   );
 
   const addMessage = useCallback((convId: string, message: Message) => {
@@ -69,8 +73,8 @@ export function useConversations() {
         const messages = [...c.messages, message];
         // 用第一条用户消息作为标题（截取前 20 字）
         const title =
-          c.messages.length === 0 && message.role === 'user'
-            ? message.content.slice(0, 20) || '新对话'
+          c.messages.length === 0 && message.role === "user"
+            ? message.content.slice(0, 20) || "新对话"
             : c.title;
         return { ...c, messages, title, updatedAt: Date.now() };
       });
@@ -86,11 +90,11 @@ export function useConversations() {
           if (c.id !== convId) return c;
           const messages = [...c.messages];
           const lastIdx = messages.length - 1;
-          if (lastIdx >= 0 && messages[lastIdx].role === 'assistant') {
-            messages[lastIdx] = { 
-              ...messages[lastIdx], 
+          if (lastIdx >= 0 && messages[lastIdx].role === "assistant") {
+            messages[lastIdx] = {
+              ...messages[lastIdx],
               content,
-              ...(reasoning !== undefined && { reasoning })
+              ...(reasoning !== undefined && { reasoning }),
             };
           }
           return { ...c, messages, updatedAt: Date.now() };
@@ -99,7 +103,7 @@ export function useConversations() {
         return next;
       });
     },
-    []
+    [],
   );
 
   const renameConversation = useCallback((id: string, title: string) => {
@@ -112,7 +116,9 @@ export function useConversations() {
 
   const updateConversationAgent = useCallback((id: string, agentId: string) => {
     setConversations((prev) => {
-      const next = prev.map((c) => (c.id === id ? { ...c, agentId, updatedAt: Date.now() } : c));
+      const next = prev.map((c) =>
+        c.id === id ? { ...c, agentId, updatedAt: Date.now() } : c,
+      );
       save(next);
       return next;
     });

@@ -5,7 +5,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
-import { Plus, Trash2, MessageSquare, Home } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Plus, MessageSquare, Home, MoreVertical, Trash } from 'lucide-react';
 import type { Agent, Conversation } from '../types';
 import AgentPicker from './AgentPicker';
 
@@ -39,7 +40,7 @@ export default function Sidebar({
               <TooltipContent side="right">返回首页</TooltipContent>
             </Tooltip>
             <MessageSquare className="size-4 text-primary" />
-            <span className="font-semibold text-sm">老彭 AI</span>
+            <span className="font-semibold text-sm">真·老彭</span>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -81,22 +82,30 @@ export default function Sidebar({
                 onClick={() => onSelect(conv.id)}
               >
                 <span className="flex-1 text-sm truncate">{conv.title}</span>
-                <Tooltip>
-                  <TooltipTrigger asChild>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="size-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:text-destructive hover:bg-transparent"
+                      className="size-5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-transparent"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <MoreVertical className="size-3" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="right" align="start">
+                    <DropdownMenuItem
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (confirm('确认删除此对话？')) onDelete(conv.id);
+                        onDelete(conv.id);
                       }}
+                      variant='destructive'
                     >
-                      <Trash2 className="size-3" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right">删除</TooltipContent>
-                </Tooltip>
+                      <Trash />
+                      删除对话
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
           </div>
