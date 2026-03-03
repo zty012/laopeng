@@ -78,8 +78,11 @@ export async function sendMessage(
   onReasoning?: (reasoning: string) => void,
 ): Promise<{ content: string; reasoning?: string }> {
   const llm = createLLM();
+  let availableTools = [...toolRegistry];
+  let mermaidToolUsed = false;
+  
   const llmWithTools =
-    toolRegistry.length > 0 ? llm.bindTools(toolRegistry) : llm;
+    availableTools.length > 0 ? llm.bindTools(availableTools) : llm;
 
   const history = toLC(messages);
   let fullResponse = "";
@@ -128,9 +131,26 @@ export async function sendMessage(
     // 检查是否有工具调用
     const toolCalls = merged.tool_calls ?? [];
     if (toolCalls.length === 0) break;
+    
+    // 如果已经使用过 set_mermaid，从后续调用中移除
+    const filteredToolCalls = toolCalls.filter(tc => {
+      if (tc.name === "set_mermaid") {
+        if (mermaidToolUsed) {
+          return false; // 已经使用过，跳过
+        }
+        mermaidToolUsed = true; // 标记为已使用
+        return true;
+      }
+      return true;
+    });
+    
+    // 如果所有工具调用都被过滤掉，结束循环
+    if (filteredToolCalls.length === 0 && toolCalls.length > 0) {
+      break;
+    }
 
-    // 流式记录工具调用过程
-    for (const tc of toolCalls) {
+    // 流式记录工具调用过程（只记录未过滤的）
+    for (const tc of filteredToolCalls) {
       toolCallCount++;
 
       // 第一步：显示正在调用工具
@@ -143,13 +163,16 @@ export async function sendMessage(
       reasoningContent += toolArgsDisplay;
       onReasoning?.(reasoningContent);
     }
-
-    // 收集所有 set_mermaid 调用，只保留最后一个
-    const mermaidCalls = toolCalls.filter(tc => tc.name === "set_mermaid");
-    const lastMermaidCall = mermaidCalls.length > 0 ? mermaidCalls[mermaidCalls.length - 1] : null;
     
-    // 执行所有工具调用
-    for (const tc of toolCalls) {
+    // 如果有被过滤的 set_mermaid 调用，显示说明
+    const skippedMermaidCalls = toolCalls.filter(tc => tc.name === "set_mermaid" && !filteredToolCalls.includes(tc));
+    if (skippedMermaidCalls.length > 0) {
+      reasoningContent += `\n\n**提示**: set_mermaid 工具已在本次对话中使用过，后续调用已跳过。`;
+      onReasoning?.(reasoningContent);
+    }
+
+    // 执行过滤后的工具调用
+    for (const tc of filteredToolCalls) {
       const foundTool = toolRegistry.find((t) => t.name === tc.name);
       let result = "工具未找到";
       if (foundTool) {
@@ -159,21 +182,11 @@ export async function sendMessage(
           };
           const toolArgs = tc.args as Record<string, unknown>;
 
-          // 特殊处理 set_mermaid 工具：只执行最后一次调用
+          // 特殊处理 set_mermaid 工具
           if (tc.name === "set_mermaid") {
             const code = toolArgs.code as string;
-            
-            // 如果不是最后一次调用，跳过执行
-            if (lastMermaidCall && tc.id !== lastMermaidCall.id) {
-              result = "已跳过（重复调用）";
-            } else if (code && onMermaidUpdate) {
-              // 只有代码不同才更新
-              if (code !== lastMermaidCode) {
-                onMermaidUpdate(code);
-                lastMermaidCode = code;
-              } else {
-                result = "代码相同，未更新";
-              }
+            if (code && onMermaidUpdate) {
+              onMermaidUpdate(code);
             }
           }
 
