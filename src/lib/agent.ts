@@ -131,12 +131,12 @@ export async function sendMessage(
     // 流式记录工具调用过程
     for (const tc of toolCalls) {
       toolCallCount++;
-      
+
       // 第一步：显示正在调用工具
       const toolCallStart = `\n\n**思考步骤 ${toolCallCount}**: 正在调用工具 \`${tc.name}\`...`;
       reasoningContent += toolCallStart;
       onReasoning?.(reasoningContent);
-      
+
       // 第二步：显示工具参数
       const toolArgsDisplay = `\n参数：\`\`\`json\n${JSON.stringify(tc.args, null, 2)}\n\`\`\``;
       reasoningContent += toolArgsDisplay;
@@ -153,15 +153,15 @@ export async function sendMessage(
             invoke: (args: unknown) => Promise<unknown>;
           };
           const toolArgs = tc.args as Record<string, unknown>;
-          
+
           // 特殊处理 set_mermaid 工具
-          if (tc.name === 'set_mermaid' && onMermaidUpdate) {
+          if (tc.name === "set_mermaid" && onMermaidUpdate) {
             const code = toolArgs.code as string;
             if (code) {
               onMermaidUpdate(code);
             }
           }
-          
+
           result = String(await invokable.invoke(tc.args));
         } catch (e) {
           result = `工具执行错误：${e}`;
