@@ -96,6 +96,20 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
           setScale(1);
           setPosition({ x: 0, y: 0 });
           
+          // 设置 mindmap 的 section edge 颜色为白色
+          if (svgRef.current) {
+            const sectionEdges = svgRef.current.querySelectorAll('.sectionEdge, .mindmap-section-edge, [class*="section-edge"]');
+            sectionEdges.forEach(edge => {
+              if (edge.tagName === 'path' || edge.tagName === 'line') {
+                edge.setAttribute('stroke', '#ffffff');
+                const existingStyle = edge.getAttribute('style') || '';
+                if (!existingStyle.includes('stroke')) {
+                  edge.setAttribute('style', `${existingStyle} stroke: #ffffff;`);
+                }
+              }
+            });
+          }
+          
           // 提取节点信息
           extractNodes();
         }
