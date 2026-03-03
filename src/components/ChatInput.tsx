@@ -7,14 +7,15 @@ import { SendHorizonal, Loader2, Image, X, XCircle, Maximize, Crop } from 'lucid
 import type { MessageAttachment } from '@/types';
 
 interface Props {
-  onSend: (text: string, attachments?: MessageAttachment[]) => void;
+  onSend: (text: string, attachments?: MessageAttachment[], selectedNodes?: string[]) => void;
   disabled?: boolean;
   initialValue?: string;
   selectedNodeCount?: number; // 选中的 Mermaid 节点数量
   onClearNodeSelection?: () => void; // 清空节点选择
+  selectedNodes?: string[]; // 选中的节点 ID 列表
 }
 
-export default function ChatInput({ onSend, disabled, initialValue, selectedNodeCount = 0, onClearNodeSelection }: Props) {
+export default function ChatInput({ onSend, disabled, initialValue, selectedNodeCount = 0, onClearNodeSelection, selectedNodes = [] }: Props) {
   const [text, setText] = useState(initialValue ?? '');
   const [attachments, setAttachments] = useState<MessageAttachment[]>([]);
   const [showCamera, setShowCamera] = useState(false);
@@ -230,7 +231,7 @@ export default function ChatInput({ onSend, disabled, initialValue, selectedNode
   const handleSend = () => {
     const trimmed = text.trim();
     if ((!trimmed && attachments.length === 0) || disabled) return;
-    onSend(trimmed, attachments.length > 0 ? attachments : undefined);
+    onSend(trimmed, attachments.length > 0 ? attachments : undefined, selectedNodes.length > 0 ? selectedNodes : undefined);
     setText('');
     setAttachments([]);
     // reset height

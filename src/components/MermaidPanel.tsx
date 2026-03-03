@@ -34,12 +34,43 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
   useEffect(() => {
     mermaid.initialize({
       startOnLoad: false,
-      theme: 'default',
-      securityLevel: 'loose',
+      theme: 'base',
+      themeVariables: {
+        fontFamily: 'system-ui, -apple-system, sans-serif',
+        fontSize: '16px',
+        primaryColor: '#e0e0e0',
+        primaryTextColor: '#1a1a1a',
+        primaryBorderColor: '#4a4a4a',
+        lineColor: '#666666',
+        secondaryColor: '#f5f5f5',
+        tertiaryColor: '#ffffff',
+        mainBkg: '#ffffff',
+        nodeBorder: '#4a4a4a',
+        clusterBkg: '#f9f9f9',
+        clusterBorder: '#cccccc',
+        titleColor: '#1a1a1a',
+        edgeLabelBackground: '#ffffff',
+        textColor: '#1a1a1a',
+        darkMode: false,
+      },
       flowchart: {
         useMaxWidth: true,
         htmlLabels: true,
         curve: 'basis',
+        padding: 20,
+        nodeSpacing: 50,
+        rankSpacing: 50,
+      },
+      sequence: {
+        useMaxWidth: true,
+        boxMargin: 10,
+        boxTextMargin: 5,
+        noteMargin: 10,
+        messageMargin: 35,
+        messageAlign: 'center',
+      },
+      class: {
+        useMaxWidth: true,
       },
     });
   }, []);
@@ -234,7 +265,7 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
   return (
     <Card className={`
       relative bg-background border-l shadow-lg transition-all duration-300 ease-in-out
-      ${isFullscreen ? 'fixed inset-4 z-50 m-auto w-fit h-fit' : 'w-96 h-full rounded-none'}
+      ${isFullscreen ? 'fixed inset-4 z-50 m-auto w-fit h-fit' : 'w-1/2 h-full rounded-none'}
       ${isOpen ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'}
     `}>
       <div className="flex items-center justify-between p-3 border-b">

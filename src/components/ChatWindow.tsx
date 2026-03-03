@@ -75,16 +75,30 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
     }));
   };
 
-  const handleSend = async (text: string, attachments?: MessageAttachment[]) => {
+  const handleSend = async (text: string, attachments?: MessageAttachment[], selectedNodes?: string[]) => {
     let conv = conversation;
     if (!conv) {
       conv = onNew();
     }
 
+    // 如果有选中的节点，添加到消息内容中
+    let content = text;
+    if (selectedNodes && selectedNodes.length > 0) {
+      const nodesInfo = mermaidState.selectedNodes.map(nodeId => {
+        // 尝试从已知的节点中获取标签
+        return `- 节点：${nodeId}`;
+      }).join('\n');
+      
+      content = `${text}\n\n[选中的节点]\n${nodesInfo}`;
+      
+      // 发送后清空选择
+      handleClearNodeSelection();
+    }
+
     const userMsg: Message = {
       id: uuidv4(),
       role: 'user',
-      content: text,
+      content: content,
       timestamp: Date.now(),
       attachments,
     };
