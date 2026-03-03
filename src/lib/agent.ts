@@ -132,6 +132,9 @@ export async function sendMessage(
     const toolCalls = merged.tool_calls ?? [];
     if (toolCalls.length === 0) break;
 
+    // 检查是否有 set_mermaid 调用
+    const hasMermaidCall = toolCalls.some((tc) => tc.name === "set_mermaid");
+    
     // 如果已经使用过 set_mermaid，从后续调用中移除
     const filteredToolCalls = toolCalls.filter((tc) => {
       if (tc.name === "set_mermaid") {
@@ -148,6 +151,9 @@ export async function sendMessage(
     if (filteredToolCalls.length === 0 && toolCalls.length > 0) {
       break;
     }
+    
+    // 如果本次使用了 set_mermaid，执行后直接结束对话
+    const willUseMermaid = hasMermaidCall && !mermaidToolUsed;
 
     // 流式记录工具调用过程（只记录未过滤的）
     for (const tc of filteredToolCalls) {
@@ -208,6 +214,12 @@ export async function sendMessage(
       reasoningContent += `\n\n**工具返回**: \`\`\`\n${result}\n\`\`\``;
       onReasoning?.(reasoningContent);
     }
+    
+    // 如果使用了 set_mermaid，直接结束对话
+    if (willUseMermaid) {
+      break;
+    }
+    
     // 不再重置 fullResponse，保留已生成的内容
     // fullResponse = "";
   }
