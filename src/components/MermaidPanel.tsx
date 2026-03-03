@@ -128,7 +128,7 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
     
     const zoomSensitivity = 0.001;
     const delta = -e.deltaY * zoomSensitivity;
-    const newScale = Math.min(Math.max(0.1, scale + delta), 5);
+    const newScale = Math.min(Math.max(0.1, scale + delta), 50);
     
     setScale(newScale);
   }, [scale]);
@@ -163,7 +163,7 @@ export default function MermaidPanel({ mermaidCode, isOpen, onClose, onNodeSelec
 
   // 放大
   const handleZoomIn = () => {
-    setScale(prev => Math.min(prev + 0.25, 5));
+    setScale(prev => Math.min(prev + 0.25, 50));
   };
 
   // 缩小

@@ -80,7 +80,7 @@ export async function sendMessage(
   const llm = createLLM();
   let availableTools = [...toolRegistry];
   let mermaidToolUsed = false;
-  
+
   const llmWithTools =
     availableTools.length > 0 ? llm.bindTools(availableTools) : llm;
 
@@ -131,9 +131,9 @@ export async function sendMessage(
     // 检查是否有工具调用
     const toolCalls = merged.tool_calls ?? [];
     if (toolCalls.length === 0) break;
-    
+
     // 如果已经使用过 set_mermaid，从后续调用中移除
-    const filteredToolCalls = toolCalls.filter(tc => {
+    const filteredToolCalls = toolCalls.filter((tc) => {
       if (tc.name === "set_mermaid") {
         if (mermaidToolUsed) {
           return false; // 已经使用过，跳过
@@ -143,7 +143,7 @@ export async function sendMessage(
       }
       return true;
     });
-    
+
     // 如果所有工具调用都被过滤掉，结束循环
     if (filteredToolCalls.length === 0 && toolCalls.length > 0) {
       break;
@@ -163,9 +163,11 @@ export async function sendMessage(
       reasoningContent += toolArgsDisplay;
       onReasoning?.(reasoningContent);
     }
-    
+
     // 如果有被过滤的 set_mermaid 调用，显示说明
-    const skippedMermaidCalls = toolCalls.filter(tc => tc.name === "set_mermaid" && !filteredToolCalls.includes(tc));
+    const skippedMermaidCalls = toolCalls.filter(
+      (tc) => tc.name === "set_mermaid" && !filteredToolCalls.includes(tc),
+    );
     if (skippedMermaidCalls.length > 0) {
       reasoningContent += `\n\n**提示**: set_mermaid 工具已在本次对话中使用过，后续调用已跳过。`;
       onReasoning?.(reasoningContent);
