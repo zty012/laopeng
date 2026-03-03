@@ -176,8 +176,8 @@ export async function sendMessage(
       reasoningContent += `\n\n**工具返回**: \`\`\`\n${result}\n\`\`\``;
       onReasoning?.(reasoningContent);
     }
-    // 重置 fullResponse，继续循环获取最终回复
-    fullResponse = "";
+    // 不再重置 fullResponse，保留已生成的内容
+    // fullResponse = "";
   }
 
   return { content: fullResponse, reasoning: reasoningContent || undefined };

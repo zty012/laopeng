@@ -32,12 +32,18 @@ export default function ChatWindow({ conversation, onAddMessage, onUpdateLast, o
   // 设置 Mermaid 回调
   useEffect(() => {
     setMermaidCallback((code: string) => {
-      setMermaidState(prev => ({
-        ...prev,
-        isOpen: true,
-        code: code,
-        selectedNodes: [],
-      }));
+      setMermaidState(prev => {
+        // 如果代码相同，不重复更新
+        if (prev.code === code) {
+          return prev;
+        }
+        return {
+          ...prev,
+          isOpen: true,
+          code: code,
+          selectedNodes: [],
+        };
+      });
     });
 
     // 清理回调
