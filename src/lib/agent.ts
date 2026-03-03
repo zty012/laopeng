@@ -128,13 +128,18 @@ export async function sendMessage(
     const toolCalls = merged.tool_calls ?? [];
     if (toolCalls.length === 0) break;
 
-    // 记录推理过程
+    // 流式记录工具调用过程
     for (const tc of toolCalls) {
       toolCallCount++;
-      const reasoningStep =
-        `\n\n**思考步骤 ${toolCallCount}**: 调用工具 \`${tc.name}\`\n` +
-        `参数：\`\`\`json\n${JSON.stringify(tc.args, null, 2)}\n\`\`\``;
-      reasoningContent += reasoningStep;
+      
+      // 第一步：显示正在调用工具
+      const toolCallStart = `\n\n**思考步骤 ${toolCallCount}**: 正在调用工具 \`${tc.name}\`...`;
+      reasoningContent += toolCallStart;
+      onReasoning?.(reasoningContent);
+      
+      // 第二步：显示工具参数
+      const toolArgsDisplay = `\n参数：\`\`\`json\n${JSON.stringify(tc.args, null, 2)}\n\`\`\``;
+      reasoningContent += toolArgsDisplay;
       onReasoning?.(reasoningContent);
     }
 
@@ -167,7 +172,7 @@ export async function sendMessage(
         new ToolMessage({ content: result, tool_call_id: toolCallId }),
       );
 
-      // 添加工具执行结果到推理过程
+      // 第三步：流式显示工具返回结果
       reasoningContent += `\n\n**工具返回**: \`\`\`\n${result}\n\`\`\``;
       onReasoning?.(reasoningContent);
     }
