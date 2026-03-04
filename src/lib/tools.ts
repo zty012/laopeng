@@ -39,30 +39,5 @@ const getCurrentTimeTool = tool(
   },
 );
 
-// ── 工具：显示 Mermaid 图表 ────────────────────────────────────────────────────
-const setMermaidTool = tool(
-  async ({ code }: { code: string }) => {
-    // 这个工具会触发前端显示 Mermaid 面板
-    // 实际渲染由前端处理
-    return `Mermaid 图表已更新。代码长度：${code.length} 字符。`;
-  },
-  {
-    name: "set_mermaid",
-    description:
-      "在页面右侧显示一个 Mermaid 图表面板。传入 Mermaid 代码，面板会以动画形式展开显示图表。用户可以点击图表中的节点（0 个或多个）进行追问。",
-    schema: z.object({
-      code: z
-        .string()
-        .describe(
-          "Mermaid 图表代码，支持 flowchart、sequenceDiagram、classDiagram 等语法",
-        ),
-    }),
-  },
-);
-
 // ── 工具注册表（在此添加新工具）──────────────────────────────────────────────
-export const toolRegistry = [
-  calculatorTool,
-  getCurrentTimeTool,
-  setMermaidTool,
-];
+export const toolRegistry = [calculatorTool, getCurrentTimeTool];

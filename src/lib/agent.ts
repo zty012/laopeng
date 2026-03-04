@@ -78,8 +78,7 @@ export async function sendMessage(
   onReasoning?: (reasoning: string) => void,
 ): Promise<{ content: string; reasoning?: string }> {
   const llm = createLLM();
-  let availableTools = [...toolRegistry];
-  let mermaidToolUsed = false;
+  const availableTools = [...toolRegistry];
 
   const llmWithTools =
     availableTools.length > 0 ? llm.bindTools(availableTools) : llm;
@@ -108,6 +107,16 @@ export async function sendMessage(
       if (typeof chunk.content === "string" && chunk.content) {
         onToken(chunk.content);
         fullResponse += chunk.content;
+
+        // 检测 Mermaid 代码块并触发回调
+        const mermaidMatch = fullResponse.match(/```mermaid([\s\S]*?)```/);
+        if (mermaidMatch && mermaidMatch[1] && onMermaidUpdate) {
+          const code = mermaidMatch[1].trim();
+          if (code !== lastMermaidCode) {
+            onMermaidUpdate(code);
+            lastMermaidCode = code;
+          }
+        }
       } else if (Array.isArray(chunk.content)) {
         for (const part of chunk.content) {
           if (
@@ -132,28 +141,8 @@ export async function sendMessage(
     const toolCalls = merged.tool_calls ?? [];
     if (toolCalls.length === 0) break;
 
-    // 检查是否有 set_mermaid 调用
-    const hasMermaidCall = toolCalls.some((tc) => tc.name === "set_mermaid");
-
-    // 如果已经使用过 set_mermaid，从后续调用中移除
-    const filteredToolCalls = toolCalls.filter((tc) => {
-      if (tc.name === "set_mermaid") {
-        if (mermaidToolUsed) {
-          return false; // 已经使用过，跳过
-        }
-        mermaidToolUsed = true; // 标记为已使用
-        return true;
-      }
-      return true;
-    });
-
-    // 如果所有工具调用都被过滤掉，结束循环
-    if (filteredToolCalls.length === 0 && toolCalls.length > 0) {
-      break;
-    }
-
-    // 流式记录工具调用过程（只记录未过滤的）
-    for (const tc of filteredToolCalls) {
+    // 流式记录工具调用过程
+    for (const tc of toolCalls) {
       toolCallCount++;
 
       // 第一步：显示正在调用工具
@@ -167,17 +156,8 @@ export async function sendMessage(
       onReasoning?.(reasoningContent);
     }
 
-    // 如果有被过滤的 set_mermaid 调用，显示说明
-    const skippedMermaidCalls = toolCalls.filter(
-      (tc) => tc.name === "set_mermaid" && !filteredToolCalls.includes(tc),
-    );
-    if (skippedMermaidCalls.length > 0) {
-      reasoningContent += `\n\n**提示**: set_mermaid 工具已在本次对话中使用过，后续调用已跳过。`;
-      onReasoning?.(reasoningContent);
-    }
-
-    // 执行过滤后的工具调用
-    for (const tc of filteredToolCalls) {
+    // 执行所有工具调用
+    for (const tc of toolCalls) {
       const foundTool = toolRegistry.find((t) => t.name === tc.name);
       let result = "工具未找到";
       if (foundTool) {
@@ -185,19 +165,7 @@ export async function sendMessage(
           const invokable = foundTool as {
             invoke: (args: unknown) => Promise<unknown>;
           };
-          const toolArgs = tc.args as Record<string, unknown>;
-
-          // 特殊处理 set_mermaid 工具
-          if (tc.name === "set_mermaid") {
-            const code = toolArgs.code as string;
-            if (code && onMermaidUpdate) {
-              onMermaidUpdate(code);
-            }
-          }
-
-          if (tc.name !== "set_mermaid" || result === "工具未找到") {
-            result = String(await invokable.invoke(tc.args));
-          }
+          result = String(await invokable.invoke(tc.args));
         } catch (e) {
           result = `工具执行错误：${e}`;
         }
@@ -211,8 +179,6 @@ export async function sendMessage(
       reasoningContent += `\n\n**工具返回**: \`\`\`\n${result}\n\`\`\``;
       onReasoning?.(reasoningContent);
     }
-    // 不再重置 fullResponse，保留已生成的内容
-    // fullResponse = "";
   }
 
   return { content: fullResponse, reasoning: reasoningContent || undefined };

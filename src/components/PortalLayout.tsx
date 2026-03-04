@@ -1,14 +1,16 @@
 "use client";
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Globe, Newspaper, BookOpen, Microscope, MessageCircle } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { Globe, Newspaper, BookOpen, Microscope, MessageCircle, ChevronRight, Book } from 'lucide-react';
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
@@ -17,6 +19,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from '@/components/ui/sidebar';
+import { notes } from '@/lib/notes';
 
 const NAV = [
   { to: '/', label: '首页', icon: Globe, exact: true },
@@ -26,12 +29,24 @@ const NAV = [
 ];
 
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname() ?? '/';
+  const rawPathname = usePathname();
+  const pathname = rawPathname ?? '/';
+  const router = useRouter();
+  const [currentNoteTitle, setCurrentNoteTitle] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (pathname === '/notes') {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentNoteTitle(params.get('title'));
+    } else {
+      setCurrentNoteTitle(null);
+    }
+  }, [pathname]);
 
   return (
     <SidebarProvider>
       <Sidebar>
-        <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
+        <SidebarHeader className="border-sidebar-border px-4 py-4">
           <div className="flex items-center gap-2.5">
             <Globe className="size-5 text-primary" />
             <span className="font-bold text-base tracking-wide">真 · 老彭</span>
@@ -40,6 +55,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
         <SidebarContent>
           <SidebarGroup>
+            <SidebarGroupLabel>菜单</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {NAV.map(({ to, label, icon: Icon, exact }) => {
@@ -51,6 +67,31 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                           <Icon />
                           <span>{label}</span>
                         </Link>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  );
+                })}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel className="flex items-center gap-2">
+              <Book className="size-3.5" />
+              <span>我的笔记</span>
+            </SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {notes.map((note) => {
+                  const isActive = pathname === '/notes' && currentNoteTitle === note.title;
+                  return (
+                    <SidebarMenuItem key={note.title}>
+                      <SidebarMenuButton 
+                        onClick={() => router.push(`/notes?title=${encodeURIComponent(note.title)}`)}
+                        isActive={isActive}
+                      >
+                        <ChevronRight className="size-3.5 opacity-50" />
+                        <span className="truncate">{note.title}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   );
