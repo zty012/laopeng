@@ -12,6 +12,7 @@ import {
   ChevronRight,
   Book,
   LogOut,
+  Home,
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,7 +32,6 @@ import {
 import { notes } from "@/lib/notes";
 
 const NAV = [
-  { to: "/", label: "首页", icon: Globe, exact: true },
   { to: "/news", label: "新闻专栏", icon: Newspaper, exact: false },
   { to: "/poetry", label: "古诗文专栏", icon: BookOpen, exact: false },
   {
@@ -90,7 +90,30 @@ export default function PortalLayout({
 
         <SidebarContent>
           <SidebarGroup>
-            <SidebarGroupLabel>菜单</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/">
+                      <Home />
+                      <span>首页</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/chat">
+                      <MessageCircle />
+                      <span>来聊聊天吧</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarGroup>
+            <SidebarGroupLabel>智能体</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {NAV.map(({ to, label, icon: Icon, exact }) => {
@@ -115,7 +138,7 @@ export default function PortalLayout({
           <SidebarGroup>
             <SidebarGroupLabel className="flex items-center gap-2">
               <Book className="size-3.5" />
-              <span>我的笔记</span>
+              <span>笔记</span>
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -145,14 +168,6 @@ export default function PortalLayout({
 
         <SidebarFooter className="border-t border-sidebar-border">
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/chat">
-                  <MessageCircle />
-                  <span>来聊聊天吧</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton onClick={handleLogout}>
                 <LogOut />
