@@ -70,9 +70,9 @@ export default function PortalLayout({
   };
 
   useEffect(() => {
-    if (pathname === "/notes") {
-      const params = new URLSearchParams(window.location.search);
-      setCurrentNoteTitle(params.get("title"));
+    if (pathname.startsWith("/notes/")) {
+      const encodedTitle = pathname.slice("/notes/".length);
+      setCurrentNoteTitle(decodeURIComponent(encodedTitle));
     } else {
       setCurrentNoteTitle(null);
     }
@@ -144,13 +144,14 @@ export default function PortalLayout({
               <SidebarMenu>
                 {notes.map((note) => {
                   const isActive =
-                    pathname === "/notes" && currentNoteTitle === note.title;
+                    pathname === `/notes/${encodeURIComponent(note.title)}` &&
+                    currentNoteTitle === note.title;
                   return (
                     <SidebarMenuItem key={note.title}>
                       <SidebarMenuButton
                         onClick={() =>
                           router.push(
-                            `/notes?title=${encodeURIComponent(note.title)}`,
+                            `/notes/${encodeURIComponent(note.title)}`,
                           )
                         }
                         isActive={isActive}

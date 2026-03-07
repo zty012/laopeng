@@ -1,13 +1,17 @@
 import NoteContent from "@/components/NoteContent";
 import PortalLayout from "@/components/PortalLayout";
 
-export default function Page() {
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ title: string }>;
+}) {
+  const { title } = await params;
+
   return (
     <PortalLayout>
       <div className="h-full flex flex-col overflow-hidden">
-        <div className="flex items-center justify-center h-full text-muted-foreground">
-          请从侧边栏选择一个笔记查看
-        </div>
+        <NoteContent title={decodeURIComponent(title)} />
       </div>
     </PortalLayout>
   );
