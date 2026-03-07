@@ -1,9 +1,18 @@
 "use client";
 
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
-import { Globe, Newspaper, BookOpen, Microscope, MessageCircle, ChevronRight, Book } from 'lucide-react';
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  Globe,
+  Newspaper,
+  BookOpen,
+  Microscope,
+  MessageCircle,
+  ChevronRight,
+  Book,
+  LogOut,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,26 +27,52 @@ import {
   SidebarMenuItem,
   SidebarProvider,
   SidebarTrigger,
-} from '@/components/ui/sidebar';
-import { notes } from '@/lib/notes';
+} from "@/components/ui/sidebar";
+import { notes } from "@/lib/notes";
 
 const NAV = [
-  { to: '/', label: '首页', icon: Globe, exact: true },
-  { to: '/news', label: '新闻专栏', icon: Newspaper, exact: false },
-  { to: '/poetry', label: '古诗文专栏', icon: BookOpen, exact: false },
-  { to: '/interdisciplinary', label: '跨学科专栏', icon: Microscope, exact: false },
+  { to: "/", label: "首页", icon: Globe, exact: true },
+  { to: "/news", label: "新闻专栏", icon: Newspaper, exact: false },
+  { to: "/poetry", label: "古诗文专栏", icon: BookOpen, exact: false },
+  {
+    to: "/interdisciplinary",
+    label: "跨学科专栏",
+    icon: Microscope,
+    exact: false,
+  },
 ];
 
-export default function PortalLayout({ children }: { children: React.ReactNode }) {
+export default function PortalLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const rawPathname = usePathname();
-  const pathname = rawPathname ?? '/';
+  const pathname = rawPathname ?? "/";
   const router = useRouter();
   const [currentNoteTitle, setCurrentNoteTitle] = useState<string | null>(null);
 
+  const handleLogout = async () => {
+    try {
+      const res = await fetch("/api/auth/logout", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        throw new Error("Logout failed");
+      }
+
+      router.push("/login");
+      router.refresh();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
+
   useEffect(() => {
-    if (pathname === '/notes') {
+    if (pathname === "/notes") {
       const params = new URLSearchParams(window.location.search);
-      setCurrentNoteTitle(params.get('title'));
+      setCurrentNoteTitle(params.get("title"));
     } else {
       setCurrentNoteTitle(null);
     }
@@ -59,7 +94,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <SidebarGroupContent>
               <SidebarMenu>
                 {NAV.map(({ to, label, icon: Icon, exact }) => {
-                  const active = exact ? pathname === to : pathname === to || pathname.startsWith(to + '/');
+                  const active = exact
+                    ? pathname === to
+                    : pathname === to || pathname.startsWith(to + "/");
                   return (
                     <SidebarMenuItem key={to}>
                       <SidebarMenuButton asChild isActive={active}>
@@ -83,11 +120,16 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             <SidebarGroupContent>
               <SidebarMenu>
                 {notes.map((note) => {
-                  const isActive = pathname === '/notes' && currentNoteTitle === note.title;
+                  const isActive =
+                    pathname === "/notes" && currentNoteTitle === note.title;
                   return (
                     <SidebarMenuItem key={note.title}>
-                      <SidebarMenuButton 
-                        onClick={() => router.push(`/notes?title=${encodeURIComponent(note.title)}`)}
+                      <SidebarMenuButton
+                        onClick={() =>
+                          router.push(
+                            `/notes?title=${encodeURIComponent(note.title)}`,
+                          )
+                        }
                         isActive={isActive}
                       >
                         <ChevronRight className="size-3.5 opacity-50" />
@@ -111,6 +153,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton onClick={handleLogout}>
+                <LogOut />
+                <span>退出登录</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
       </Sidebar>
@@ -119,9 +167,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         <header className="flex h-10 items-center gap-2 px-4 border-b border-border">
           <SidebarTrigger className="-ml-1" />
         </header>
-        <div className="flex-1 overflow-auto">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   );
