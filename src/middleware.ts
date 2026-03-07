@@ -9,38 +9,38 @@ const SECRET = new TextEncoder().encode(
 export async function middleware(request: NextRequest) {
   return NextResponse.next();
 
-  const { pathname } = request.nextUrl;
+  // const { pathname } = request.nextUrl;
 
-  // 1. Exclude paths that don't need auth
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/sso") ||
-    pathname.startsWith("/api/bsch-login") ||
-    pathname.startsWith("/api/bsch-authapi")
-  ) {
-    return NextResponse.next();
-  }
+  // // 1. Exclude paths that don't need auth
+  // if (
+  //   pathname.startsWith("/login") ||
+  //   pathname.startsWith("/api/auth") ||
+  //   pathname.startsWith("/api/sso") ||
+  //   pathname.startsWith("/api/bsch-login") ||
+  //   pathname.startsWith("/api/bsch-authapi")
+  // ) {
+  //   return NextResponse.next();
+  // }
 
-  // 2. Check for token in cookies
-  const token = request.cookies.get("auth_token")?.value;
+  // // 2. Check for token in cookies
+  // const token = request.cookies.get("auth_token")?.value;
 
-  if (!token) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+  // if (!token) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = "/login";
+  //   return NextResponse.redirect(url);
+  // }
 
-  // 3. Verify JWT
-  try {
-    await jwtVerify(token, SECRET);
-    return NextResponse.next();
-  } catch (error) {
-    // 4. Verification failed, redirect to login
-    const url = request.nextUrl.clone();
-    url.pathname = "/login";
-    return NextResponse.redirect(url);
-  }
+  // // 3. Verify JWT
+  // try {
+  //   await jwtVerify(token, SECRET);
+  //   return NextResponse.next();
+  // } catch (error) {
+  //   // 4. Verification failed, redirect to login
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = "/login";
+  //   return NextResponse.redirect(url);
+  // }
 }
 
 // Config to specify matching paths
