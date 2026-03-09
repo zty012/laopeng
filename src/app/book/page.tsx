@@ -33,10 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 // Set up worker using the locally installed pdfjs-dist
-pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-  "pdfjs-dist/build/pdf.worker.min.mjs",
-  import.meta.url,
-).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 // 页数偏移：代码中的第 1 页对应 PDF 的第 PAGE_OFFSET + 1 页
 const PAGE_OFFSET = 7;
@@ -193,6 +190,7 @@ export default function BookPage() {
               <Document
                 file="/book.pdf"
                 onLoadSuccess={onDocumentLoadSuccess}
+                onLoadError={(error) => console.error("Error while loading document!", error)}
                 loading={
                   <div className="flex items-center justify-center h-full py-20">
                     加载中...
