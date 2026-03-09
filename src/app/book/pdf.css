@@ -1,0 +1,24 @@
+.pdf-outline {
+  font-size: 0.875rem;
+}
+
+.pdf-outline ul {
+  list-style-type: none;
+  padding-left: 1rem;
+}
+
+.pdf-outline li {
+  margin: 0.5rem 0;
+}
+
+.pdf-outline a {
+  text-decoration: none;
+  color: hsl(var(--foreground));
+  display: block;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.pdf-outline a:hover {
+  background-color: hsl(var(--accent));
+}

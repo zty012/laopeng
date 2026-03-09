@@ -108,6 +108,14 @@ export default function PortalLayout({
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/book">
+                      <Book />
+                      <span>教材</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
@@ -137,7 +145,6 @@ export default function PortalLayout({
 
           <SidebarGroup>
             <SidebarGroupLabel className="flex items-center gap-2">
-              <Book className="size-3.5" />
               <span>笔记</span>
             </SidebarGroupLabel>
             <SidebarGroupContent>
