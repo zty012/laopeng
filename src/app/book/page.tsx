@@ -1,36 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import "react-pdf/dist/Page/AnnotationLayer.css";
-import "react-pdf/dist/Page/TextLayer.css";
-import "./pdf.css";
-import {
-  ChevronLeft,
-  ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  List,
-  Book,
-  Pen,
-  Eraser,
-  Palette,
-  Trash2,
-  Undo2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { cn } from "@/lib/utils";
 import {
   AnnotationCanvas,
   AnnotationCanvasHandle,
 } from "@/components/AnnotationCanvas";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
+import { Eraser, Pen, Trash2, Undo2, ZoomIn, ZoomOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Document, Page, pdfjs } from "react-pdf";
+import "react-pdf/dist/Page/AnnotationLayer.css";
+import "react-pdf/dist/Page/TextLayer.css";
+import "./pdf.css";
 
 // Set up worker using the locally installed pdfjs-dist
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -115,6 +102,26 @@ export default function BookPage() {
   const canvasRefs = useRef<{ [key: number]: AnnotationCanvasHandle | null }>(
     {},
   );
+  const [pdfUrl, setPdfUrl] = useState<any>("/book.pdf");
+
+  useEffect(() => {
+    const loadPdf = async () => {
+      try {
+        const response = await fetch("/book.pdf");
+        const blob = await response.blob();
+        setPdfUrl(URL.createObjectURL(blob));
+      } catch (err) {
+        console.error("Failed to fetch PDF blob:", err);
+      }
+    };
+    loadPdf();
+
+    return () => {
+      if (typeof pdfUrl === "string" && pdfUrl.startsWith("blob:")) {
+        URL.revokeObjectURL(pdfUrl);
+      }
+    };
+  }, []);
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
     setNumPages(numPages);
@@ -186,11 +193,16 @@ export default function BookPage() {
             onScroll={handleScroll}
             className="flex-1 w-full overflow-y-auto overflow-x-hidden bg-muted/20 scroll-smooth"
           >
-            <div className="flex flex-col items-center p-4 min-h-full space-y-4">
+            <div className="flex flex-col items-center p-4 min-h-screen space-y-4">
               <Document
-                file="/book.pdf"
+                file={pdfUrl || "/book.pdf"}
                 onLoadSuccess={onDocumentLoadSuccess}
-                onLoadError={(error) => console.error("Error while loading document!", error)}
+                onLoadError={(error) =>
+                  console.error("Error while loading document!", error)
+                }
+                onSourceError={(error) =>
+                  console.error("Error while getting source!", error)
+                }
                 loading={
                   <div className="flex items-center justify-center h-full py-20">
                     加载中...

@@ -367,7 +367,7 @@ export default function ChatInput({ onSend, disabled, initialValue, selectedNode
           </div>
         )}
         
-        <input
+        {/* <input
           ref={fileInputRef}
           type="file"
           accept="image/*"
@@ -394,7 +394,7 @@ export default function ChatInput({ onSend, disabled, initialValue, selectedNode
           className="shrink-0 size-10"
         >
           <Image className="size-4" />
-        </Button>
+        </Button> */}
         <Textarea
           ref={textareaRef}
           rows={1}

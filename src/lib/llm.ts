@@ -1,30 +1,24 @@
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatDeepSeek } from "@langchain/deepseek";
 
 /**
- * 创建 OpenRouter LLM 实例
- * 需要在 .env 文件中设置 OPENROUTER_API_KEY
- * 可选设置 OPENROUTER_MODEL（默认 deepseek/deepseek-chat-v3-0324:free）
+ * 创建 DeepSeek LLM 实例
+ * 需要在环境变量中设置 DEEPSEEK_API_KEY
  */
 export function createLLM() {
-  const apiKey = process.env.NEXT_PUBLIC_OPENROUTER_API_KEY as string;
+  const apiKey = process.env.NEXT_PUBLIC_DEEPSEEK_API_KEY as string;
   const model =
-    (process.env.NEXT_PUBLIC_OPENROUTER_MODEL as string) ||
-    "deepseek/deepseek-chat-v3-0324:free";
+    (process.env.NEXT_PUBLIC_DEEPSEEK_MODEL as string) || "deepseek-chat";
 
   if (!apiKey) {
-    throw new Error("请在 .env 文件中设置 OPENROUTER_API_KEY");
+    throw new Error("请在环境变量中设置 DEEPSEEK_API_KEY");
   }
 
-  return new ChatOpenAI({
+  return new ChatDeepSeek({
     model,
     apiKey,
-    configuration: {
-      baseURL: "https://openrouter.ai/api/v1",
-      defaultHeaders: {
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Laopeng Chat",
-      },
-    },
     streaming: true,
+    reasoning: {
+      effort: "high",
+    },
   });
 }
