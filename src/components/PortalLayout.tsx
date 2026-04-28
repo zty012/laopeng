@@ -13,6 +13,7 @@ import {
   Book,
   LogOut,
   Home,
+  Dices,
 } from "lucide-react";
 import {
   Sidebar,
@@ -113,6 +114,14 @@ export default function PortalLayout({
                     <Link href="/book">
                       <Book />
                       <span>教材</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <Link href="/draw">
+                      <Dices />
+                      <span>抽签</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
